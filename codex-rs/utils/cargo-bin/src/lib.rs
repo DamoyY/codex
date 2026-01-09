@@ -1,4 +1,7 @@
 use std::ffi::OsString;
+use std::io::BufRead;
+use std::io::BufReader;
+use std::path::Path;
 use std::path::PathBuf;
 
 pub use path_absolutize;
@@ -23,6 +26,63 @@ pub enum CargoBinError {
         env_keys: Vec<String>,
         fallback: String,
     },
+}
+
+pub fn resolve_runfiles_manifest(runfiles_key: &str) -> Option<PathBuf> {
+    let manifest = std::env::var_os("RUNFILES_MANIFEST_FILE")?;
+    let file = std::fs::File::open(manifest).ok()?;
+    let reader = BufReader::new(file);
+
+    for line in reader.lines().map_while(Result::ok) {
+        if line.is_empty() {
+            continue;
+        }
+        let (key, value) = line.split_once(' ')?;
+        if key == runfiles_key {
+            return Some(PathBuf::from(value));
+        }
+    }
+
+    None
+}
+
+pub fn resolve_runfiles_manifest_dir(runfiles_key: &str) -> Option<PathBuf> {
+    let manifest = std::env::var_os("RUNFILES_MANIFEST_FILE")?;
+    let file = std::fs::File::open(manifest).ok()?;
+    let reader = BufReader::new(file);
+
+    let prefix = format!("{runfiles_key}/");
+    for line in reader.lines().map_while(Result::ok) {
+        if line.is_empty() {
+            continue;
+        }
+        let (key, value) = line.split_once(' ')?;
+        if key.starts_with(&prefix) {
+            return PathBuf::from(value).parent().map(PathBuf::from);
+        }
+    }
+
+    None
+}
+
+pub fn normalize_runfiles_key(path: &Path) -> String {
+    use std::path::Component;
+
+    let mut parts = Vec::new();
+    for component in path.components() {
+        match component {
+            Component::CurDir => {}
+            Component::ParentDir => {
+                parts.pop();
+            }
+            Component::Normal(segment) => {
+                parts.push(segment.to_string_lossy().into_owned());
+            }
+            Component::Prefix(_) | Component::RootDir => {}
+        }
+    }
+
+    parts.join("/")
 }
 
 /// Returns an absolute path to a binary target built for the current test run.
@@ -93,46 +153,106 @@ macro_rules! find_resource {
         // included in the compiled binary (even if it is built with Cargo), but
         // we only check it at runtime if `RUNFILES_DIR` is set.
         let resource = std::path::Path::new(&$resource);
-        match std::env::var("RUNFILES_DIR") {
-            Ok(bazel_runtime_files) => match option_env!("BAZEL_PACKAGE") {
-                Some(bazel_package) => {
-                    use $crate::path_absolutize::Absolutize;
+        let manifest_resolved = if std::env::var_os("RUNFILES_MANIFEST_FILE").is_some() {
+            if let Some(bazel_package) = option_env!("BAZEL_PACKAGE") {
+                let runfiles_path = std::path::PathBuf::from("_main")
+                    .join(bazel_package)
+                    .join(resource);
+                let runfiles_key = $crate::normalize_runfiles_key(&runfiles_path);
+                $crate::resolve_runfiles_manifest(&runfiles_key)
+                    .or_else(|| $crate::resolve_runfiles_manifest_dir(&runfiles_key))
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+        if let Some(resolved) = manifest_resolved {
+            Ok(resolved)
+        } else {
+            match std::env::var("RUNFILES_DIR") {
+                Ok(bazel_runtime_files) => match option_env!("BAZEL_PACKAGE") {
+                    Some(bazel_package) => {
+                        use $crate::path_absolutize::Absolutize;
 
-                    let manifest_dir = std::path::PathBuf::from(bazel_runtime_files)
-                        .join("_main")
-                        .join(bazel_package)
-                        .join(resource);
-                    // Note we also have to normalize (but not canonicalize!)
-                    // the path for _Bazel_ because the original value ends with
-                    // `codex-rs/exec-server/tests/common/../suite/bash`, but
-                    // the `tests/common` folder will not exist at runtime under
-                    // Bazel. As such, we have to normalize it before passing it
-                    // to `dotslash fetch`.
-                    manifest_dir.absolutize().map(|p| p.to_path_buf())
+                        let manifest_dir = std::path::PathBuf::from(bazel_runtime_files)
+                            .join("_main")
+                            .join(bazel_package)
+                            .join(resource);
+                        // Note we also have to normalize (but not canonicalize!)
+                        // the path for _Bazel_ because the original value ends with
+                        // `codex-rs/exec-server/tests/common/../suite/bash`, but
+                        // the `tests/common` folder will not exist at runtime under
+                        // Bazel. As such, we have to normalize it before passing it
+                        // to `dotslash fetch`.
+                        manifest_dir.absolutize().map(|p| p.to_path_buf())
+                    }
+                    None => Err(std::io::Error::new(
+                        std::io::ErrorKind::NotFound,
+                        "BAZEL_PACKAGE not set in Bazel build",
+                    )),
+                },
+                Err(_) => {
+                    let manifest_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+                    Ok(manifest_dir.join(resource))
                 }
-                None => Err(std::io::Error::new(
-                    std::io::ErrorKind::NotFound,
-                    "BAZEL_PACKAGE not set in Bazel build",
-                )),
-            },
-            Err(_) => {
-                let manifest_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-                Ok(manifest_dir.join(resource))
             }
         }
     }};
 }
 
 fn resolve_bin_from_env(key: &str, value: OsString) -> Result<PathBuf, CargoBinError> {
+    let raw_path = PathBuf::from(&value);
     let abs = absolutize_from_buck_or_cwd(PathBuf::from(value))?;
 
     if abs.exists() {
         Ok(abs)
+    } else if let Some(resolved) =
+        resolve_from_runfiles_manifest(&raw_path).or_else(|| resolve_from_runfiles_manifest(&abs))
+    {
+        if resolved.exists() {
+            Ok(resolved)
+        } else {
+            Err(CargoBinError::ResolvedPathDoesNotExist {
+                key: key.to_owned(),
+                path: resolved,
+            })
+        }
     } else {
         Err(CargoBinError::ResolvedPathDoesNotExist {
             key: key.to_owned(),
             path: abs,
         })
+    }
+}
+
+fn resolve_from_runfiles_manifest(path: &Path) -> Option<PathBuf> {
+    let runfiles_key = runfiles_key_from_path(path)?;
+    resolve_runfiles_manifest(&runfiles_key)
+}
+
+fn runfiles_key_from_path(path: &Path) -> Option<String> {
+    if path.is_absolute() {
+        let mut found_runfiles = false;
+        let mut rel = PathBuf::new();
+        for component in path.components() {
+            let component_str = component.as_os_str().to_string_lossy().into_owned();
+            if found_runfiles {
+                rel.push(component_str);
+                continue;
+            }
+            if component_str.ends_with(".runfiles") {
+                found_runfiles = true;
+            }
+        }
+        if found_runfiles && !rel.as_os_str().is_empty() {
+            return Some(normalize_runfiles_key(&rel));
+        }
+        None
+    } else if path.as_os_str().is_empty() {
+        None
+    } else {
+        Some(normalize_runfiles_key(path))
     }
 }
 
