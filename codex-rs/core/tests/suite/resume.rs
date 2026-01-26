@@ -26,7 +26,11 @@ async fn resume_includes_initial_messages_from_rollout_events() -> Result<()> {
     let initial = builder.build(&server).await?;
     let codex = Arc::clone(&initial.codex);
     let home = initial.home.clone();
-    let rollout_path = initial.session_configured.rollout_path.clone();
+    let rollout_path = initial
+        .session_configured
+        .rollout_path
+        .clone()
+        .expect("rollout path");
 
     let initial_sse = sse(vec![
         ev_response_created("resp-initial"),
@@ -35,10 +39,10 @@ async fn resume_includes_initial_messages_from_rollout_events() -> Result<()> {
     ]);
     mount_sse_once(&server, initial_sse).await;
 
-    let text_elements = vec![TextElement {
-        byte_range: ByteRange { start: 0, end: 6 },
-        placeholder: Some("<note>".into()),
-    }];
+    let text_elements = vec![TextElement::new(
+        ByteRange { start: 0, end: 6 },
+        Some("<note>".into()),
+    )];
 
     codex
         .submit(Op::UserInput {
@@ -85,7 +89,11 @@ async fn resume_includes_initial_messages_from_reasoning_events() -> Result<()> 
     let initial = builder.build(&server).await?;
     let codex = Arc::clone(&initial.codex);
     let home = initial.home.clone();
-    let rollout_path = initial.session_configured.rollout_path.clone();
+    let rollout_path = initial
+        .session_configured
+        .rollout_path
+        .clone()
+        .expect("rollout path");
 
     let initial_sse = sse(vec![
         ev_response_created("resp-initial"),
@@ -143,7 +151,11 @@ async fn resume_switches_models_preserves_base_instructions() -> Result<()> {
     let initial = builder.build(&server).await?;
     let codex = Arc::clone(&initial.codex);
     let home = initial.home.clone();
-    let rollout_path = initial.session_configured.rollout_path.clone();
+    let rollout_path = initial
+        .session_configured
+        .rollout_path
+        .clone()
+        .expect("rollout path");
 
     let initial_sse = sse(vec![
         ev_response_created("resp-initial"),

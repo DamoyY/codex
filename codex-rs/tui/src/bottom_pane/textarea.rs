@@ -755,21 +755,15 @@ impl TextArea {
             .iter()
             .map(|e| {
                 let placeholder = self.text.get(e.range.clone()).map(str::to_string);
-                UserTextElement {
-                    byte_range: ByteRange {
+                UserTextElement::new(
+                    ByteRange {
                         start: e.range.start,
                         end: e.range.end,
                     },
                     placeholder,
-                }
+                )
             })
             .collect()
-    }
-
-    pub fn element_payload_starting_at(&self, pos: usize) -> Option<String> {
-        let pos = pos.min(self.text.len());
-        let elem = self.elements.iter().find(|e| e.range.start == pos)?;
-        self.text.get(elem.range.clone()).map(str::to_string)
     }
 
     /// Renames a single text element in-place, keeping it atomic.
@@ -1325,6 +1319,21 @@ mod tests {
         t.set_cursor(t.text().len());
         t.delete_forward(1);
         assert_eq!(t.text(), "b");
+    }
+
+    #[test]
+    fn delete_forward_deletes_element_at_left_edge() {
+        let mut t = TextArea::new();
+        t.insert_str("a");
+        t.insert_element("<element>");
+        t.insert_str("b");
+
+        let elem_start = t.elements[0].range.start;
+        t.set_cursor(elem_start);
+        t.delete_forward(1);
+
+        assert_eq!(t.text(), "ab");
+        assert_eq!(t.cursor(), elem_start);
     }
 
     #[test]
