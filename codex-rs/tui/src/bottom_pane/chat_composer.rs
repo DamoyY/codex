@@ -1835,7 +1835,7 @@ impl ChatComposer {
                     self.personality_command_enabled,
                 )
                 .find(|(command_name, _)| *command_name == name)
-                && cmd == SlashCommand::Review
+                && matches!(cmd, SlashCommand::Fork | SlashCommand::Review)
             {
                 self.textarea.set_text_clearing_elements("");
                 return Some(InputResult::CommandWithArgs(cmd, rest.to_string()));
