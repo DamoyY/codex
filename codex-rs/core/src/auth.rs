@@ -721,7 +721,10 @@ impl UnauthorizedRecovery {
             }
             UnauthorizedRecoveryStep::ExternalRefresh => {
                 self.manager
-                    .refresh_external_auth(ExternalAuthRefreshReason::Unauthorized)
+                    .refresh_external_auth(
+                        ExternalAuthRefreshReason::Unauthorized,
+                        self.manager.forced_chatgpt_workspace_id(),
+                    )
                     .await?;
                 self.step = UnauthorizedRecoveryStep::Done;
             }
@@ -745,6 +748,7 @@ pub struct AuthManager {
     inner: RwLock<CachedAuth>,
     enable_codex_api_key_env: bool,
     auth_credentials_store_mode: AuthCredentialsStoreMode,
+    forced_chatgpt_workspace_id: RwLock<Option<String>>,
 }
 
 impl AuthManager {
@@ -774,6 +778,7 @@ impl AuthManager {
             }),
             enable_codex_api_key_env,
             auth_credentials_store_mode,
+            forced_chatgpt_workspace_id: RwLock::new(None),
         }
     }
 
@@ -792,6 +797,7 @@ impl AuthManager {
             inner: RwLock::new(cached),
             enable_codex_api_key_env: false,
             auth_credentials_store_mode: AuthCredentialsStoreMode::File,
+            forced_chatgpt_workspace_id: RwLock::new(None),
         })
     }
 
@@ -809,6 +815,7 @@ impl AuthManager {
             inner: RwLock::new(cached),
             enable_codex_api_key_env: false,
             auth_credentials_store_mode: AuthCredentialsStoreMode::File,
+            forced_chatgpt_workspace_id: RwLock::new(None),
         })
     }
 
@@ -901,6 +908,19 @@ impl AuthManager {
         }
     }
 
+    pub fn set_forced_chatgpt_workspace_id(&self, workspace_id: Option<String>) {
+        if let Ok(mut guard) = self.forced_chatgpt_workspace_id.write() {
+            *guard = workspace_id;
+        }
+    }
+
+    pub fn forced_chatgpt_workspace_id(&self) -> Option<String> {
+        self.forced_chatgpt_workspace_id
+            .read()
+            .ok()
+            .and_then(|guard| guard.clone())
+    }
+
     pub fn has_external_auth_refresher(&self) -> bool {
         self.inner
             .read()
@@ -979,7 +999,10 @@ impl AuthManager {
     pub async fn refresh_token(&self) -> Result<(), RefreshTokenError> {
         if self.is_external_auth_active() {
             return self
-                .refresh_external_auth(ExternalAuthRefreshReason::Unauthorized)
+                .refresh_external_auth(
+                    ExternalAuthRefreshReason::Unauthorized,
+                    self.forced_chatgpt_workspace_id(),
+                )
                 .await;
         }
         tracing::info!("Refreshing token");
@@ -1043,6 +1066,7 @@ impl AuthManager {
     async fn refresh_external_auth(
         &self,
         reason: ExternalAuthRefreshReason,
+        forced_chatgpt_workspace_id: Option<String>,
     ) -> Result<(), RefreshTokenError> {
         let (refresher, previous_account_id) = match self.inner.read() {
             Ok(guard) => {
@@ -1071,6 +1095,19 @@ impl AuthManager {
         };
 
         let refreshed = refresher.refresh(context).await?;
+        if let Some(expected_workspace_id) = forced_chatgpt_workspace_id.as_deref() {
+            let id_token = parse_id_token(&refreshed.id_token)
+                .map_err(|err| RefreshTokenError::Transient(std::io::Error::other(err)))?;
+            let actual_workspace_id = id_token.chatgpt_account_id.as_deref();
+            if actual_workspace_id != Some(expected_workspace_id) {
+                return Err(RefreshTokenError::Transient(std::io::Error::other(
+                    format!(
+                        "external auth refresh returned workspace {:?}, expected {:?}",
+                        actual_workspace_id, expected_workspace_id
+                    ),
+                )));
+            }
+        }
         let _changed = self.set_external_auth(refreshed);
         Ok(())
     }

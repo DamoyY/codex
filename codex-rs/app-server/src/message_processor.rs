@@ -125,6 +125,7 @@ impl MessageProcessor {
             false,
             config.cli_auth_credentials_store_mode,
         );
+        auth_manager.set_forced_chatgpt_workspace_id(config.forced_chatgpt_workspace_id.clone());
         auth_manager.set_external_auth_refresher(Arc::new(ExternalAuthRefreshBridge {
             outgoing: outgoing.clone(),
         }));
