@@ -867,6 +867,7 @@ impl Session {
             sandbox_policy: session_configuration.sandbox_policy.get().clone(),
             codex_linux_sandbox_exe: config.codex_linux_sandbox_exe.clone(),
             sandbox_cwd: session_configuration.cwd.clone(),
+            use_bwrap_sandbox: config.features.enabled(Feature::UseLinuxSandboxBwrap),
         };
         let cancel_token = sess.mcp_startup_cancellation_token().await;
 
@@ -1077,6 +1078,9 @@ impl Session {
                 sandbox_policy: per_turn_config.sandbox_policy.get().clone(),
                 codex_linux_sandbox_exe: per_turn_config.codex_linux_sandbox_exe.clone(),
                 sandbox_cwd: per_turn_config.cwd.clone(),
+                use_bwrap_sandbox: per_turn_config
+                    .features
+                    .enabled(Feature::UseLinuxSandboxBwrap),
             };
             if let Err(e) = self
                 .services
@@ -2083,6 +2087,7 @@ impl Session {
             sandbox_policy: turn_context.sandbox_policy.clone(),
             codex_linux_sandbox_exe: turn_context.codex_linux_sandbox_exe.clone(),
             sandbox_cwd: turn_context.cwd.clone(),
+            use_bwrap_sandbox: turn_context.features.enabled(Feature::UseLinuxSandboxBwrap),
         };
         let cancel_token = self.reset_mcp_startup_cancellation_token().await;
 

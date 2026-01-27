@@ -93,6 +93,7 @@ impl EscalateServer {
             &sandbox_state.sandbox_policy,
             &sandbox_state.sandbox_cwd,
             &sandbox_state.codex_linux_sandbox_exe,
+            sandbox_state.use_bwrap_sandbox,
             None,
         )
         .await?;

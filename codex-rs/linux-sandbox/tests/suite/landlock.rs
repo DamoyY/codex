@@ -2,6 +2,7 @@
 #![allow(clippy::unwrap_used)]
 use codex_core::config::types::ShellEnvironmentPolicy;
 use codex_core::error::CodexErr;
+use codex_core::error::Result;
 use codex_core::error::SandboxErr;
 use codex_core::exec::ExecParams;
 use codex_core::exec::process_exec_tool_call;
@@ -52,6 +53,17 @@ async fn run_cmd_output(
     writable_roots: &[PathBuf],
     timeout_ms: u64,
 ) -> codex_core::exec::ExecToolCallOutput {
+    run_cmd_result(cmd, writable_roots, timeout_ms)
+        .await
+        .expect("sandboxed command should succeed")
+}
+
+#[expect(clippy::expect_used, clippy::unwrap_used)]
+async fn run_cmd_result(
+    cmd: &[&str],
+    writable_roots: &[PathBuf],
+    timeout_ms: u64,
+) -> Result<codex_core::exec::ExecToolCallOutput> {
     let cwd = std::env::current_dir().expect("cwd should exist");
     let sandbox_cwd = cwd.clone();
     let params = ExecParams {
@@ -84,10 +96,10 @@ async fn run_cmd_output(
         &sandbox_policy,
         sandbox_cwd.as_path(),
         &codex_linux_sandbox_exe,
+        false,
         None,
     )
     .await
-    .unwrap()
 }
 
 #[tokio::test]
@@ -189,6 +201,7 @@ async fn assert_network_blocked(cmd: &[&str]) {
         &sandbox_policy,
         sandbox_cwd.as_path(),
         &codex_linux_sandbox_exe,
+        false,
         None,
     )
     .await;
@@ -237,6 +250,81 @@ async fn sandbox_blocks_ping() {
 async fn sandbox_blocks_nc() {
     // Zero‑length connection attempt to localhost.
     assert_network_blocked(&["nc", "-z", "127.0.0.1", "80"]).await;
+}
+
+#[tokio::test]
+async fn sandbox_blocks_git_and_codex_writes_inside_writable_root() {
+    let tmpdir = tempfile::tempdir().expect("tempdir");
+    let dot_git = tmpdir.path().join(".git");
+    let dot_codex = tmpdir.path().join(".codex");
+    std::fs::create_dir_all(&dot_git).expect("create .git");
+    std::fs::create_dir_all(&dot_codex).expect("create .codex");
+
+    let git_target = dot_git.join("config");
+    let codex_target = dot_codex.join("config.toml");
+
+    let git_err = run_cmd_result(
+        &[
+            "bash",
+            "-lc",
+            &format!("echo blocked > {}", git_target.to_string_lossy()),
+        ],
+        &[tmpdir.path().to_path_buf()],
+        LONG_TIMEOUT_MS,
+    )
+    .await
+    .expect_err("expected .git write to be denied");
+
+    let codex_err = run_cmd_result(
+        &[
+            "bash",
+            "-lc",
+            &format!("echo blocked > {}", codex_target.to_string_lossy()),
+        ],
+        &[tmpdir.path().to_path_buf()],
+        LONG_TIMEOUT_MS,
+    )
+    .await
+    .expect_err("expected .codex write to be denied");
+
+    assert!(matches!(
+        git_err,
+        CodexErr::Sandbox(SandboxErr::Denied { .. })
+    ));
+    assert!(matches!(
+        codex_err,
+        CodexErr::Sandbox(SandboxErr::Denied { .. })
+    ));
+}
+
+#[tokio::test]
+async fn sandbox_blocks_codex_symlink_replacement_attack() {
+    use std::os::unix::fs::symlink;
+
+    let tmpdir = tempfile::tempdir().expect("tempdir");
+    let decoy = tmpdir.path().join("decoy-codex");
+    std::fs::create_dir_all(&decoy).expect("create decoy dir");
+
+    let dot_codex = tmpdir.path().join(".codex");
+    symlink(&decoy, &dot_codex).expect("create .codex symlink");
+
+    let codex_target = dot_codex.join("config.toml");
+    let codex_err = run_cmd_result(
+        &[
+            "bash",
+            "-lc",
+            &format!("echo blocked > {}", codex_target.to_string_lossy()),
+        ],
+        &[tmpdir.path().to_path_buf()],
+        LONG_TIMEOUT_MS,
+    )
+    .await
+    .expect_err("expected .codex symlink write to be denied");
+
+    assert!(matches!(
+        codex_err,
+        CodexErr::Sandbox(SandboxErr::Denied { .. })
+    ));
 }
 
 #[tokio::test]

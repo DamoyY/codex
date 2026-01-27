@@ -59,6 +59,7 @@ pub async fn list_accessible_connectors_from_mcp_tools(
         sandbox_policy: SandboxPolicy::ReadOnly,
         codex_linux_sandbox_exe: config.codex_linux_sandbox_exe.clone(),
         sandbox_cwd: env::current_dir().unwrap_or_else(|_| PathBuf::from("/")),
+        use_bwrap_sandbox: config.features.enabled(Feature::UseLinuxSandboxBwrap),
     };
 
     mcp_connection_manager
