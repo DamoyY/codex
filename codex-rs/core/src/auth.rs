@@ -72,16 +72,15 @@ pub enum RefreshTokenError {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ExternalAuthState {
-    pub token: String,
+    pub access_token: String,
+    pub id_token: String,
+    /// Derived from the ID token when possible.
     pub account_id: Option<String>,
-    pub email: Option<String>,
-    pub plan_type: Option<AccountPlanType>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ExternalAuthRefreshReason {
     Unauthorized,
-    Manual,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -567,51 +566,20 @@ fn refresh_token_endpoint() -> String {
         .unwrap_or_else(|_| REFRESH_TOKEN_URL.to_string())
 }
 
-fn internal_plan_type_from_account(plan_type: AccountPlanType) -> InternalPlanType {
-    let known = match plan_type {
-        AccountPlanType::Free => Some(InternalKnownPlan::Free),
-        AccountPlanType::Plus => Some(InternalKnownPlan::Plus),
-        AccountPlanType::Pro => Some(InternalKnownPlan::Pro),
-        AccountPlanType::Team => Some(InternalKnownPlan::Team),
-        AccountPlanType::Business => Some(InternalKnownPlan::Business),
-        AccountPlanType::Enterprise => Some(InternalKnownPlan::Enterprise),
-        AccountPlanType::Edu => Some(InternalKnownPlan::Edu),
-        AccountPlanType::Unknown => None,
-    };
-
-    match known {
-        Some(known_plan) => InternalPlanType::Known(known_plan),
-        None => InternalPlanType::Unknown("unknown".to_string()),
-    }
-}
-
-fn id_token_info_from_external(external: &ExternalAuthState) -> IdTokenInfo {
-    let parsed = parse_id_token(&external.token).unwrap_or_else(|_| IdTokenInfo {
+fn id_token_info_from_external(id_token: &str) -> IdTokenInfo {
+    parse_id_token(id_token).unwrap_or_else(|_| IdTokenInfo {
         email: None,
         chatgpt_plan_type: None,
         chatgpt_user_id: None,
         chatgpt_account_id: None,
-        raw_jwt: external.token.clone(),
-    });
-
-    let mut id_token = parsed;
-    if let Some(email) = external.email.clone() {
-        id_token.email = Some(email);
-    }
-    if let Some(plan_type) = external.plan_type {
-        id_token.chatgpt_plan_type = Some(internal_plan_type_from_account(plan_type));
-    }
-    if let Some(account_id) = external.account_id.clone() {
-        id_token.chatgpt_account_id = Some(account_id);
-    }
-    id_token
+        raw_jwt: id_token.to_string(),
+    })
 }
 
-fn auth_dot_json_from_external(external: &ExternalAuthState) -> AuthDotJson {
-    let id_token = id_token_info_from_external(external);
+fn auth_dot_json_from_external(external: &ExternalAuthState, id_token: IdTokenInfo) -> AuthDotJson {
     let tokens = TokenData {
         id_token,
-        access_token: external.token.clone(),
+        access_token: external.access_token.clone(),
         refresh_token: String::new(),
         account_id: external.account_id.clone(),
     };
@@ -949,11 +917,14 @@ impl AuthManager {
             .is_some()
     }
 
-    pub fn set_external_auth(&self, external: ExternalAuthState) -> bool {
+    pub fn set_external_auth(&self, mut external: ExternalAuthState) -> bool {
+        let id_token = id_token_info_from_external(&external.id_token);
+        external.account_id = id_token.chatgpt_account_id.clone();
+
         let storage =
             create_auth_storage(self.codex_home.clone(), self.auth_credentials_store_mode);
         let client = crate::default_client::create_client();
-        let auth_dot_json = auth_dot_json_from_external(&external);
+        let auth_dot_json = auth_dot_json_from_external(&external, id_token);
         let external_auth = CodexAuth {
             mode: AuthMode::ChatGPT,
             api_key: None,
@@ -1008,7 +979,7 @@ impl AuthManager {
     pub async fn refresh_token(&self) -> Result<(), RefreshTokenError> {
         if self.is_external_auth_active() {
             return self
-                .refresh_external_auth(ExternalAuthRefreshReason::Manual)
+                .refresh_external_auth(ExternalAuthRefreshReason::Unauthorized)
                 .await;
         }
         tracing::info!("Refreshing token");

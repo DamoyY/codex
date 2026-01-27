@@ -163,22 +163,21 @@ async fn set_auth_token_updates_account_and_notifies() -> Result<()> {
     )?;
     write_models_cache(codex_home.path())?;
 
-    let token = encode_id_token(
+    let id_token = encode_id_token(
         &ChatGptIdTokenClaims::new()
             .email("embedded@example.com")
             .plan_type("pro")
             .chatgpt_account_id("org-embedded"),
     )?;
+    let access_token = "access-embedded".to_string();
 
     let mut mcp = McpProcess::new_with_env(codex_home.path(), &[("OPENAI_API_KEY", None)]).await?;
     timeout(DEFAULT_READ_TIMEOUT, mcp.initialize()).await??;
 
     let set_id = mcp
         .send_set_auth_token_request(SetAuthTokenParams {
-            token: token.clone(),
-            account_id: Some("org-embedded".to_string()),
-            email: Some("embedded@example.com".to_string()),
-            plan_type: Some(AccountPlanType::Pro),
+            access_token,
+            id_token: id_token.clone(),
         })
         .await?;
     let set_resp: JSONRPCResponse = timeout(
@@ -224,7 +223,11 @@ async fn set_auth_token_updates_account_and_notifies() -> Result<()> {
     Ok(())
 }
 
-async fn respond_to_refresh_request(mcp: &mut McpProcess, token: &str) -> Result<()> {
+async fn respond_to_refresh_request(
+    mcp: &mut McpProcess,
+    access_token: &str,
+    id_token: &str,
+) -> Result<()> {
     let refresh_req: ServerRequest = timeout(
         DEFAULT_READ_TIMEOUT,
         mcp.read_stream_until_request_message(),
@@ -235,10 +238,8 @@ async fn respond_to_refresh_request(mcp: &mut McpProcess, token: &str) -> Result
     };
     assert_eq!(params.reason, AccountRefreshAuthTokenReason::Unauthorized);
     let response = AccountRefreshAuthTokenResponse {
-        token: token.to_string(),
-        account_id: Some("org-refreshed".to_string()),
-        email: Some("refreshed@example.com".to_string()),
-        plan_type: Some(AccountPlanType::Pro),
+        access_token: access_token.to_string(),
+        id_token: id_token.to_string(),
     };
     mcp.send_response(request_id, serde_json::to_value(response)?)
         .await?;
@@ -273,28 +274,28 @@ async fn external_auth_refreshes_on_unauthorized() -> Result<()> {
     )
     .await;
 
-    let initial_token = encode_id_token(
+    let initial_id_token = encode_id_token(
         &ChatGptIdTokenClaims::new()
             .email("initial@example.com")
             .plan_type("pro")
             .chatgpt_account_id("org-initial"),
     )?;
-    let refreshed_token = encode_id_token(
+    let refreshed_id_token = encode_id_token(
         &ChatGptIdTokenClaims::new()
             .email("refreshed@example.com")
             .plan_type("pro")
             .chatgpt_account_id("org-refreshed"),
     )?;
+    let initial_access_token = "access-initial".to_string();
+    let refreshed_access_token = "access-refreshed".to_string();
 
     let mut mcp = McpProcess::new_with_env(codex_home.path(), &[("OPENAI_API_KEY", None)]).await?;
     timeout(DEFAULT_READ_TIMEOUT, mcp.initialize()).await??;
 
     let set_id = mcp
         .send_set_auth_token_request(SetAuthTokenParams {
-            token: initial_token.clone(),
-            account_id: Some("org-initial".to_string()),
-            email: Some("initial@example.com".to_string()),
-            plan_type: Some(AccountPlanType::Pro),
+            access_token: initial_access_token.clone(),
+            id_token: initial_id_token.clone(),
         })
         .await?;
     let set_resp: JSONRPCResponse = timeout(
@@ -332,7 +333,7 @@ async fn external_auth_refreshes_on_unauthorized() -> Result<()> {
             ..Default::default()
         })
         .await?;
-    respond_to_refresh_request(&mut mcp, &refreshed_token).await?;
+    respond_to_refresh_request(&mut mcp, &refreshed_access_token, &refreshed_id_token).await?;
     let _turn_resp: JSONRPCResponse = timeout(
         DEFAULT_READ_TIMEOUT,
         mcp.read_stream_until_response_message(RequestId::Integer(turn_req)),
@@ -348,11 +349,11 @@ async fn external_auth_refreshes_on_unauthorized() -> Result<()> {
     assert_eq!(requests.len(), 2);
     assert_eq!(
         requests[0].header("authorization"),
-        Some(format!("Bearer {initial_token}"))
+        Some(format!("Bearer {initial_access_token}"))
     );
     assert_eq!(
         requests[1].header("authorization"),
-        Some(format!("Bearer {refreshed_token}"))
+        Some(format!("Bearer {refreshed_access_token}"))
     );
 
     Ok(())

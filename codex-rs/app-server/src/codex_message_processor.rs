@@ -172,6 +172,7 @@ use codex_core::read_head_for_summary;
 use codex_core::read_session_meta_line;
 use codex_core::rollout_date_parts;
 use codex_core::sandboxing::SandboxPermissions;
+use codex_core::token_data::parse_id_token;
 use codex_core::windows_sandbox::WindowsSandboxLevelExt;
 use codex_feedback::CodexFeedback;
 use codex_login::ServerOptions as LoginServerOptions;
@@ -1002,14 +1003,27 @@ impl CodexMessageProcessor {
             return;
         }
 
+        let id_token_info = match parse_id_token(&params.id_token) {
+            Ok(info) => info,
+            Err(err) => {
+                let error = JSONRPCErrorError {
+                    code: INVALID_REQUEST_ERROR_CODE,
+                    message: format!("invalid id token: {err}"),
+                    data: None,
+                };
+                self.outgoing.send_error(request_id, error).await;
+                return;
+            }
+        };
+
         if let Some(expected_workspace) = self.config.forced_chatgpt_workspace_id.as_deref()
-            && params.account_id.as_deref() != Some(expected_workspace)
+            && id_token_info.chatgpt_account_id.as_deref() != Some(expected_workspace)
         {
+            let account_id = id_token_info.chatgpt_account_id;
             let error = JSONRPCErrorError {
                 code: INVALID_REQUEST_ERROR_CODE,
                 message: format!(
-                    "External auth must use workspace {expected_workspace}, but received {:?}.",
-                    params.account_id
+                    "External auth must use workspace {expected_workspace}, but received {account_id:?}."
                 ),
                 data: None,
             };
@@ -1018,10 +1032,9 @@ impl CodexMessageProcessor {
         }
 
         let external = ExternalAuthState {
-            token: params.token,
-            account_id: params.account_id,
-            email: params.email,
-            plan_type: params.plan_type,
+            access_token: params.access_token,
+            id_token: params.id_token,
+            account_id: id_token_info.chatgpt_account_id,
         };
         let _changed = self.auth_manager.set_external_auth(external);
 

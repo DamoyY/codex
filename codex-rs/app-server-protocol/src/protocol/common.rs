@@ -879,10 +879,8 @@ mod tests {
         let request = ClientRequest::SetAuthToken {
             request_id: RequestId::Integer(5),
             params: v2::SetAuthTokenParams {
-                token: "jwt-token".to_string(),
-                account_id: Some("org-123".to_string()),
-                email: Some("user@example.com".to_string()),
-                plan_type: Some(PlanType::Pro),
+                access_token: "access-token".to_string(),
+                id_token: "id-token".to_string(),
             },
         };
         assert_eq!(
@@ -890,10 +888,8 @@ mod tests {
                 "method": "account/setAuthToken",
                 "id": 5,
                 "params": {
-                    "token": "jwt-token",
-                    "accountId": "org-123",
-                    "email": "user@example.com",
-                    "planType": "pro"
+                    "accessToken": "access-token",
+                    "idToken": "id-token"
                 }
             }),
             serde_json::to_value(&request)?,

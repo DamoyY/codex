@@ -875,14 +875,14 @@ pub struct LogoutAccountResponse {}
 #[serde(rename_all = "camelCase")]
 #[ts(export_to = "v2/")]
 pub struct SetAuthTokenParams {
-    /// Access token (JWT) supplied by the embedding parent application.
-    pub token: String,
-    /// Optional workspace/account identifier associated with the token.
-    pub account_id: Option<String>,
-    /// Optional email address for display in account/read.
-    pub email: Option<String>,
-    /// Optional plan type for display in account/read.
-    pub plan_type: Option<PlanType>,
+    /// ID token (JWT) supplied by the parent application.
+    ///
+    /// This token is used for identity and account metadata (email, plan type,
+    /// workspace id).
+    pub id_token: String,
+    /// Access token (JWT) supplied by the parent application.
+    /// This token is used for backend API requests.
+    pub access_token: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, JsonSchema, TS)]
@@ -903,6 +903,13 @@ pub enum AccountRefreshAuthTokenReason {
 #[ts(export_to = "v2/")]
 pub struct AccountRefreshAuthTokenParams {
     pub reason: AccountRefreshAuthTokenReason,
+    /// Workspace/account identifier that Codex was previously using.
+    ///
+    /// Clients that manage multiple accounts/workspaces can use this as a hint
+    /// to refresh the token for the correct workspace.
+    ///
+    /// This may be `null` when the prior ID token did not include a workspace
+    /// identifier (`chatgpt_account_id`) or when the token could not be parsed.
     pub previous_account_id: Option<String>,
 }
 
@@ -910,10 +917,8 @@ pub struct AccountRefreshAuthTokenParams {
 #[serde(rename_all = "camelCase")]
 #[ts(export_to = "v2/")]
 pub struct AccountRefreshAuthTokenResponse {
-    pub token: String,
-    pub account_id: Option<String>,
-    pub email: Option<String>,
-    pub plan_type: Option<PlanType>,
+    pub id_token: String,
+    pub access_token: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, JsonSchema, TS)]

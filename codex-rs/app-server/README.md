@@ -593,11 +593,11 @@ The JSON-RPC auth/account surface exposes request/response methods plus server-i
 - `account/login/completed` (notify) — emitted when a login attempt finishes (success or error).
 - `account/login/cancel` — cancel a pending ChatGPT login by `loginId`.
 - `account/logout` — sign out; triggers `account/updated`.
-- `account/setAuthToken` — set an externally-managed ChatGPT JWT; switches the server into external auth mode.
+- `account/setAuthToken` — set externally-managed ChatGPT tokens (`accessToken` + `idToken`); switches the server into external auth mode.
 - `account/updated` (notify) — emitted whenever auth mode changes (`authMode`: `apikey`, `chatgpt`, or `null`).
 - `account/rateLimits/read` — fetch ChatGPT rate limits; updates arrive via `account/rateLimits/updated` (notify).
 - `account/rateLimits/updated` (notify) — emitted whenever a user's ChatGPT rate limits change.
-- `account/refreshAuthToken` (server request) — emitted when external auth is active and the server encounters `401 Unauthorized`; the client must respond with a fresh token.
+- `account/refreshAuthToken` (server request) — emitted when external auth is active and the server encounters `401 Unauthorized`; the client must respond with fresh tokens (`accessToken` + `idToken`).
 - `mcpServer/oauthLogin/completed` (notify) — emitted after a `mcpServer/oauth/login` flow finishes for a server; payload includes `{ name, success, error? }`.
 
 ### 1) Check auth state
@@ -622,6 +622,19 @@ Field notes:
 - `refreshToken` (bool): set `true` to force a token refresh.
 - When external auth mode is active, `refreshToken: true` may trigger a server request to the client (`account/refreshAuthToken`) instead of performing an internal refresh.
 - `requiresOpenaiAuth` reflects the active provider; when `false`, Codex can run without OpenAI credentials.
+
+External auth tokens:
+
+```json
+{
+  "method": "account/setAuthToken",
+  "id": 9,
+  "params": {
+    "accessToken": "access-token-jwt",
+    "idToken": "id-token-jwt"
+  }
+}
+```
 
 ### 2) Log in with an API key
 

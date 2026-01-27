@@ -77,10 +77,9 @@ impl ExternalAuthRefresher for ExternalAuthRefreshBridge {
             serde_json::from_value(result).map_err(std::io::Error::other)?;
 
         Ok(ExternalAuthState {
-            token: response.token,
-            account_id: response.account_id,
-            email: response.email,
-            plan_type: response.plan_type,
+            access_token: response.access_token,
+            id_token: response.id_token,
+            account_id: None,
         })
     }
 }
