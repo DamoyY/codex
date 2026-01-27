@@ -1095,9 +1095,9 @@ impl AuthManager {
         };
 
         let refreshed = refresher.refresh(context).await?;
+        let id_token = parse_id_token(&refreshed.id_token)
+            .map_err(|err| RefreshTokenError::Transient(std::io::Error::other(err)))?;
         if let Some(expected_workspace_id) = forced_chatgpt_workspace_id.as_deref() {
-            let id_token = parse_id_token(&refreshed.id_token)
-                .map_err(|err| RefreshTokenError::Transient(std::io::Error::other(err)))?;
             let actual_workspace_id = id_token.chatgpt_account_id.as_deref();
             if actual_workspace_id != Some(expected_workspace_id) {
                 return Err(RefreshTokenError::Transient(std::io::Error::other(
