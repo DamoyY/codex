@@ -1004,6 +1004,14 @@ impl CodexMessageProcessor {
             return;
         }
 
+        // Cancel any active login attempt to avoid persisting managed auth state.
+        {
+            let mut guard = self.active_login.lock().await;
+            if let Some(active) = guard.take() {
+                drop(active);
+            }
+        }
+
         let id_token_info = match parse_id_token(&params.id_token) {
             Ok(info) => info,
             Err(err) => {

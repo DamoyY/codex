@@ -14,6 +14,7 @@ use codex_app_server_protocol::AccountRefreshAuthTokenResponse;
 use codex_app_server_protocol::AuthMode;
 use codex_app_server_protocol::CancelLoginAccountParams;
 use codex_app_server_protocol::CancelLoginAccountResponse;
+use codex_app_server_protocol::CancelLoginAccountStatus;
 use codex_app_server_protocol::GetAccountParams;
 use codex_app_server_protocol::GetAccountResponse;
 use codex_app_server_protocol::JSONRPCError;
@@ -836,6 +837,73 @@ async fn login_account_chatgpt_start_can_be_cancelled() -> Result<()> {
         maybe_updated.is_err(),
         "account/updated should not be emitted when login is cancelled"
     );
+    Ok(())
+}
+
+#[tokio::test]
+// Serialize tests that launch the login server since it binds to a fixed port.
+#[serial(login_port)]
+async fn set_auth_token_cancels_active_chatgpt_login() -> Result<()> {
+    let codex_home = TempDir::new()?;
+    create_config_toml(codex_home.path(), CreateConfigTomlParams::default())?;
+
+    let mut mcp = McpProcess::new(codex_home.path()).await?;
+    timeout(DEFAULT_READ_TIMEOUT, mcp.initialize()).await??;
+
+    // Initiate the ChatGPT login flow
+    let request_id = mcp.send_login_account_chatgpt_request().await?;
+    let resp: JSONRPCResponse = timeout(
+        DEFAULT_READ_TIMEOUT,
+        mcp.read_stream_until_response_message(RequestId::Integer(request_id)),
+    )
+    .await??;
+
+    let login: LoginAccountResponse = to_response(resp)?;
+    let LoginAccountResponse::Chatgpt { login_id, .. } = login else {
+        bail!("unexpected login response: {login:?}");
+    };
+
+    let id_token = encode_id_token(
+        &ChatGptIdTokenClaims::new()
+            .email("embedded@example.com")
+            .plan_type("pro")
+            .chatgpt_account_id("org-embedded"),
+    )?;
+    // Set an external auth token instead of completing the ChatGPT login flow.
+    // This should cancel the active login attempt.
+    let set_id = mcp
+        .send_set_auth_token_request(SetAuthTokenParams {
+            access_token: "access-embedded".to_string(),
+            id_token,
+        })
+        .await?;
+    let set_resp: JSONRPCResponse = timeout(
+        DEFAULT_READ_TIMEOUT,
+        mcp.read_stream_until_response_message(RequestId::Integer(set_id)),
+    )
+    .await??;
+    let _ok: SetAuthTokenResponse = to_response(set_resp)?;
+    let _updated = timeout(
+        DEFAULT_READ_TIMEOUT,
+        mcp.read_stream_until_notification_message("account/updated"),
+    )
+    .await??;
+
+    // Verify that the active login attempt was cancelled.
+    // We check this by trying to cancel it and expecting a not found error.
+    let cancel_id = mcp
+        .send_cancel_login_account_request(CancelLoginAccountParams {
+            login_id: login_id.clone(),
+        })
+        .await?;
+    let cancel_resp: JSONRPCResponse = timeout(
+        DEFAULT_READ_TIMEOUT,
+        mcp.read_stream_until_response_message(RequestId::Integer(cancel_id)),
+    )
+    .await??;
+    let cancel: CancelLoginAccountResponse = to_response(cancel_resp)?;
+    assert_eq!(cancel.status, CancelLoginAccountStatus::NotFound);
+
     Ok(())
 }
 
