@@ -114,15 +114,19 @@ pub fn run_main() -> ! {
 
 /// Build the inner command that applies seccomp after bubblewrap.
 fn build_inner_seccomp_command(
-    sandbox_policy_cwd: &PathBuf,
+    sandbox_policy_cwd: &Path,
     sandbox_policy: &codex_core::protocol::SandboxPolicy,
     use_bwrap_sandbox: bool,
     command: Vec<String>,
 ) -> Vec<String> {
-    #[expect(clippy::expect_used)]
-    let current_exe = std::env::current_exe().expect("Failed to resolve current executable path");
-    let policy_json =
-        serde_json::to_string(sandbox_policy).expect("Failed to serialize sandbox policy");
+    let current_exe = match std::env::current_exe() {
+        Ok(path) => path,
+        Err(err) => panic!("failed to resolve current executable path: {err}"),
+    };
+    let policy_json = match serde_json::to_string(sandbox_policy) {
+        Ok(json) => json,
+        Err(err) => panic!("failed to serialize sandbox policy: {err}"),
+    };
 
     let mut inner = vec![
         current_exe.to_string_lossy().to_string(),
