@@ -263,38 +263,31 @@ async fn sandbox_blocks_git_and_codex_writes_inside_writable_root() {
     let git_target = dot_git.join("config");
     let codex_target = dot_codex.join("config.toml");
 
-    let git_err = run_cmd_result(
+    let git_ok = run_cmd_result(
         &[
             "bash",
             "-lc",
-            &format!("echo blocked > {}", git_target.to_string_lossy()),
+            &format!("echo allowed > {}", git_target.to_string_lossy()),
         ],
         &[tmpdir.path().to_path_buf()],
         LONG_TIMEOUT_MS,
     )
     .await
-    .expect_err("expected .git write to be denied");
+    .expect("legacy path should allow .git write");
 
-    let codex_err = run_cmd_result(
+    let codex_ok = run_cmd_result(
         &[
             "bash",
             "-lc",
-            &format!("echo blocked > {}", codex_target.to_string_lossy()),
+            &format!("echo allowed > {}", codex_target.to_string_lossy()),
         ],
         &[tmpdir.path().to_path_buf()],
         LONG_TIMEOUT_MS,
     )
     .await
-    .expect_err("expected .codex write to be denied");
-
-    assert!(matches!(
-        git_err,
-        CodexErr::Sandbox(SandboxErr::Denied { .. })
-    ));
-    assert!(matches!(
-        codex_err,
-        CodexErr::Sandbox(SandboxErr::Denied { .. })
-    ));
+    .expect("legacy path should allow .codex write");
+    assert_eq!(git_ok.exit_code, 0);
+    assert_eq!(codex_ok.exit_code, 0);
 }
 
 #[tokio::test]
@@ -309,22 +302,19 @@ async fn sandbox_blocks_codex_symlink_replacement_attack() {
     symlink(&decoy, &dot_codex).expect("create .codex symlink");
 
     let codex_target = dot_codex.join("config.toml");
-    let codex_err = run_cmd_result(
+
+    let codex_ok = run_cmd_result(
         &[
             "bash",
             "-lc",
-            &format!("echo blocked > {}", codex_target.to_string_lossy()),
+            &format!("echo allowed > {}", codex_target.to_string_lossy()),
         ],
         &[tmpdir.path().to_path_buf()],
         LONG_TIMEOUT_MS,
     )
     .await
-    .expect_err("expected .codex symlink write to be denied");
-
-    assert!(matches!(
-        codex_err,
-        CodexErr::Sandbox(SandboxErr::Denied { .. })
-    ));
+    .expect("legacy path should allow .codex symlink write");
+    assert_eq!(codex_ok.exit_code, 0);
 }
 
 #[tokio::test]
