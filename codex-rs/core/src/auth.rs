@@ -1,5 +1,6 @@
 mod storage;
 
+use async_trait::async_trait;
 use chrono::Utc;
 use reqwest::StatusCode;
 use serde::Deserialize;
@@ -23,6 +24,7 @@ use crate::auth::storage::create_auth_storage;
 use crate::config::Config;
 use crate::error::RefreshTokenFailedError;
 use crate::error::RefreshTokenFailedReason;
+use crate::token_data::IdTokenInfo;
 use crate::token_data::KnownPlan as InternalKnownPlan;
 use crate::token_data::PlanType as InternalPlanType;
 use crate::token_data::TokenData;
@@ -66,6 +68,34 @@ pub enum RefreshTokenError {
     Permanent(#[from] RefreshTokenFailedError),
     #[error(transparent)]
     Transient(#[from] std::io::Error),
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ExternalAuthState {
+    pub token: String,
+    pub account_id: Option<String>,
+    pub email: Option<String>,
+    pub plan_type: Option<AccountPlanType>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ExternalAuthRefreshReason {
+    Unauthorized,
+    Manual,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ExternalAuthRefreshContext {
+    pub reason: ExternalAuthRefreshReason,
+    pub previous_account_id: Option<String>,
+}
+
+#[async_trait]
+pub trait ExternalAuthRefresher: Send + Sync {
+    async fn refresh(
+        &self,
+        context: ExternalAuthRefreshContext,
+    ) -> std::io::Result<ExternalAuthState>;
 }
 
 impl RefreshTokenError {
@@ -537,23 +567,105 @@ fn refresh_token_endpoint() -> String {
         .unwrap_or_else(|_| REFRESH_TOKEN_URL.to_string())
 }
 
+fn internal_plan_type_from_account(plan_type: AccountPlanType) -> InternalPlanType {
+    let known = match plan_type {
+        AccountPlanType::Free => Some(InternalKnownPlan::Free),
+        AccountPlanType::Plus => Some(InternalKnownPlan::Plus),
+        AccountPlanType::Pro => Some(InternalKnownPlan::Pro),
+        AccountPlanType::Team => Some(InternalKnownPlan::Team),
+        AccountPlanType::Business => Some(InternalKnownPlan::Business),
+        AccountPlanType::Enterprise => Some(InternalKnownPlan::Enterprise),
+        AccountPlanType::Edu => Some(InternalKnownPlan::Edu),
+        AccountPlanType::Unknown => None,
+    };
+
+    match known {
+        Some(known_plan) => InternalPlanType::Known(known_plan),
+        None => InternalPlanType::Unknown("unknown".to_string()),
+    }
+}
+
+fn id_token_info_from_external(external: &ExternalAuthState) -> IdTokenInfo {
+    let parsed = parse_id_token(&external.token).unwrap_or_else(|_| IdTokenInfo {
+        email: None,
+        chatgpt_plan_type: None,
+        chatgpt_user_id: None,
+        chatgpt_account_id: None,
+        raw_jwt: external.token.clone(),
+    });
+
+    let mut id_token = parsed;
+    if let Some(email) = external.email.clone() {
+        id_token.email = Some(email);
+    }
+    if let Some(plan_type) = external.plan_type {
+        id_token.chatgpt_plan_type = Some(internal_plan_type_from_account(plan_type));
+    }
+    if let Some(account_id) = external.account_id.clone() {
+        id_token.chatgpt_account_id = Some(account_id);
+    }
+    id_token
+}
+
+fn auth_dot_json_from_external(external: &ExternalAuthState) -> AuthDotJson {
+    let id_token = id_token_info_from_external(external);
+    let tokens = TokenData {
+        id_token,
+        access_token: external.token.clone(),
+        refresh_token: String::new(),
+        account_id: external.account_id.clone(),
+    };
+
+    AuthDotJson {
+        openai_api_key: None,
+        tokens: Some(tokens),
+        last_refresh: Some(Utc::now()),
+    }
+}
+
 use std::sync::RwLock;
 
 /// Internal cached auth state.
-#[derive(Clone, Debug)]
 struct CachedAuth {
-    auth: Option<CodexAuth>,
+    managed_auth: Option<CodexAuth>,
+    external_state: Option<ExternalAuthState>,
+    external_auth: Option<CodexAuth>,
+    external_refresher: Option<Arc<dyn ExternalAuthRefresher>>,
+}
+
+impl Debug for CachedAuth {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("CachedAuth")
+            .field("managed_auth", &self.managed_auth)
+            .field("external_state", &self.external_state)
+            .field(
+                "external_auth",
+                &self.external_auth.as_ref().map(|a| a.mode),
+            )
+            .field(
+                "external_refresher",
+                &self.external_refresher.as_ref().map(|_| "present"),
+            )
+            .finish()
+    }
 }
 
 enum UnauthorizedRecoveryStep {
     Reload,
     RefreshToken,
+    ExternalRefresh,
     Done,
 }
 
 enum ReloadOutcome {
     Reloaded,
     Skipped,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum UnauthorizedRecoveryMode {
+    Managed,
+    External,
 }
 
 // UnauthorizedRecovery is a state machine that handles an attempt to refresh the authentication when requests
@@ -568,6 +680,7 @@ pub struct UnauthorizedRecovery {
     manager: Arc<AuthManager>,
     step: UnauthorizedRecoveryStep,
     expected_account_id: Option<String>,
+    mode: UnauthorizedRecoveryMode,
 }
 
 impl UnauthorizedRecovery {
@@ -576,10 +689,20 @@ impl UnauthorizedRecovery {
             .auth_cached()
             .as_ref()
             .and_then(CodexAuth::get_account_id);
+        let mode = if manager.is_external_auth_active() {
+            UnauthorizedRecoveryMode::External
+        } else {
+            UnauthorizedRecoveryMode::Managed
+        };
+        let step = match mode {
+            UnauthorizedRecoveryMode::Managed => UnauthorizedRecoveryStep::Reload,
+            UnauthorizedRecoveryMode::External => UnauthorizedRecoveryStep::ExternalRefresh,
+        };
         Self {
             manager,
-            step: UnauthorizedRecoveryStep::Reload,
+            step,
             expected_account_id,
+            mode,
         }
     }
 
@@ -588,6 +711,12 @@ impl UnauthorizedRecovery {
             .manager
             .auth_cached()
             .is_some_and(|auth| auth.mode == AuthMode::ChatGPT)
+        {
+            return false;
+        }
+
+        if self.mode == UnauthorizedRecoveryMode::External
+            && !self.manager.has_external_auth_refresher()
         {
             return false;
         }
@@ -622,6 +751,12 @@ impl UnauthorizedRecovery {
                 self.manager.refresh_token().await?;
                 self.step = UnauthorizedRecoveryStep::Done;
             }
+            UnauthorizedRecoveryStep::ExternalRefresh => {
+                self.manager
+                    .refresh_external_auth(ExternalAuthRefreshReason::Unauthorized)
+                    .await?;
+                self.step = UnauthorizedRecoveryStep::Done;
+            }
             UnauthorizedRecoveryStep::Done => {}
         }
         Ok(())
@@ -654,7 +789,7 @@ impl AuthManager {
         enable_codex_api_key_env: bool,
         auth_credentials_store_mode: AuthCredentialsStoreMode,
     ) -> Self {
-        let auth = load_auth(
+        let managed_auth = load_auth(
             &codex_home,
             enable_codex_api_key_env,
             auth_credentials_store_mode,
@@ -663,7 +798,12 @@ impl AuthManager {
         .flatten();
         Self {
             codex_home,
-            inner: RwLock::new(CachedAuth { auth }),
+            inner: RwLock::new(CachedAuth {
+                managed_auth,
+                external_state: None,
+                external_auth: None,
+                external_refresher: None,
+            }),
             enable_codex_api_key_env,
             auth_credentials_store_mode,
         }
@@ -672,7 +812,12 @@ impl AuthManager {
     #[cfg(any(test, feature = "test-support"))]
     /// Create an AuthManager with a specific CodexAuth, for testing only.
     pub fn from_auth_for_testing(auth: CodexAuth) -> Arc<Self> {
-        let cached = CachedAuth { auth: Some(auth) };
+        let cached = CachedAuth {
+            managed_auth: Some(auth),
+            external_state: None,
+            external_auth: None,
+            external_refresher: None,
+        };
 
         Arc::new(Self {
             codex_home: PathBuf::from("non-existent"),
@@ -685,7 +830,12 @@ impl AuthManager {
     #[cfg(any(test, feature = "test-support"))]
     /// Create an AuthManager with a specific CodexAuth and codex home, for testing only.
     pub fn from_auth_for_testing_with_home(auth: CodexAuth, codex_home: PathBuf) -> Arc<Self> {
-        let cached = CachedAuth { auth: Some(auth) };
+        let cached = CachedAuth {
+            managed_auth: Some(auth),
+            external_state: None,
+            external_auth: None,
+            external_refresher: None,
+        };
         Arc::new(Self {
             codex_home,
             inner: RwLock::new(cached),
@@ -696,7 +846,12 @@ impl AuthManager {
 
     /// Current cached auth (clone) without attempting a refresh.
     pub fn auth_cached(&self) -> Option<CodexAuth> {
-        self.inner.read().ok().and_then(|c| c.auth.clone())
+        self.inner.read().ok().and_then(|c| {
+            if let Some(external) = c.external_auth.clone() {
+                return Some(external);
+            }
+            c.managed_auth.clone()
+        })
     }
 
     /// Current cached auth (clone). May be `None` if not logged in or load failed.
@@ -715,7 +870,7 @@ impl AuthManager {
     pub fn reload(&self) -> bool {
         tracing::info!("Reloading auth");
         let new_auth = self.load_auth_from_storage();
-        self.set_auth(new_auth)
+        self.set_managed_auth(new_auth)
     }
 
     fn reload_if_account_id_matches(&self, expected_account_id: Option<&str>) -> ReloadOutcome {
@@ -739,7 +894,7 @@ impl AuthManager {
         }
 
         tracing::info!("Reloading auth for account {expected_account_id}");
-        self.set_auth(new_auth);
+        self.set_managed_auth(new_auth);
         ReloadOutcome::Reloaded
     }
 
@@ -761,11 +916,69 @@ impl AuthManager {
         .flatten()
     }
 
-    fn set_auth(&self, new_auth: Option<CodexAuth>) -> bool {
+    fn set_managed_auth(&self, new_auth: Option<CodexAuth>) -> bool {
         if let Ok(mut guard) = self.inner.write() {
-            let changed = !AuthManager::auths_equal(&guard.auth, &new_auth);
+            let changed = !AuthManager::auths_equal(&guard.managed_auth, &new_auth);
             tracing::info!("Reloaded auth, changed: {changed}");
-            guard.auth = new_auth;
+            guard.managed_auth = new_auth;
+            changed
+        } else {
+            false
+        }
+    }
+
+    pub fn set_external_auth_refresher(&self, refresher: Arc<dyn ExternalAuthRefresher>) {
+        if let Ok(mut guard) = self.inner.write() {
+            guard.external_refresher = Some(refresher);
+        }
+    }
+
+    pub fn has_external_auth_refresher(&self) -> bool {
+        self.inner
+            .read()
+            .ok()
+            .and_then(|guard| guard.external_refresher.as_ref().map(|_| ()))
+            .is_some()
+    }
+
+    pub fn is_external_auth_active(&self) -> bool {
+        self.inner
+            .read()
+            .ok()
+            .and_then(|guard| guard.external_auth.as_ref().map(|_| ()))
+            .is_some()
+    }
+
+    pub fn set_external_auth(&self, external: ExternalAuthState) -> bool {
+        let storage =
+            create_auth_storage(self.codex_home.clone(), self.auth_credentials_store_mode);
+        let client = crate::default_client::create_client();
+        let auth_dot_json = auth_dot_json_from_external(&external);
+        let external_auth = CodexAuth {
+            mode: AuthMode::ChatGPT,
+            api_key: None,
+            auth_dot_json: Arc::new(Mutex::new(Some(auth_dot_json))),
+            storage,
+            client,
+        };
+
+        if let Ok(mut guard) = self.inner.write() {
+            let changed = guard.external_state.as_ref() != Some(&external);
+            guard.external_state = Some(external);
+            guard.external_auth = Some(external_auth);
+            tracing::info!("Set external auth, changed: {changed}");
+            changed
+        } else {
+            false
+        }
+    }
+
+    pub fn clear_external_auth(&self) -> bool {
+        if let Ok(mut guard) = self.inner.write() {
+            let changed = guard.external_state.is_some();
+            guard.external_state = None;
+            guard.external_auth = None;
+            tracing::info!("Cleared external auth, changed: {changed}");
             changed
         } else {
             false
@@ -793,6 +1006,11 @@ impl AuthManager {
     /// the auth state from disk so other components observe refreshed token.
     /// If the token refresh fails, returns the error to the caller.
     pub async fn refresh_token(&self) -> Result<(), RefreshTokenError> {
+        if self.is_external_auth_active() {
+            return self
+                .refresh_external_auth(ExternalAuthRefreshReason::Manual)
+                .await;
+        }
         tracing::info!("Refreshing token");
 
         let auth = match self.auth_cached() {
@@ -824,6 +1042,9 @@ impl AuthManager {
     }
 
     async fn refresh_if_stale(&self, auth: &CodexAuth) -> Result<bool, RefreshTokenError> {
+        if self.is_external_auth_active() {
+            return Ok(false);
+        }
         if auth.mode != AuthMode::ChatGPT {
             return Ok(false);
         }
@@ -846,6 +1067,41 @@ impl AuthManager {
         self.refresh_tokens(auth, tokens.refresh_token).await?;
         self.reload();
         Ok(true)
+    }
+
+    async fn refresh_external_auth(
+        &self,
+        reason: ExternalAuthRefreshReason,
+    ) -> Result<(), RefreshTokenError> {
+        let (refresher, previous_account_id) = match self.inner.read() {
+            Ok(guard) => {
+                let previous_account_id = guard
+                    .external_state
+                    .as_ref()
+                    .and_then(|state| state.account_id.clone());
+                (guard.external_refresher.clone(), previous_account_id)
+            }
+            Err(_) => {
+                return Err(RefreshTokenError::Transient(std::io::Error::other(
+                    "failed to read external auth state",
+                )));
+            }
+        };
+
+        let Some(refresher) = refresher else {
+            return Err(RefreshTokenError::Transient(std::io::Error::other(
+                "external auth refresher is not configured",
+            )));
+        };
+
+        let context = ExternalAuthRefreshContext {
+            reason,
+            previous_account_id,
+        };
+
+        let refreshed = refresher.refresh(context).await?;
+        let _changed = self.set_external_auth(refreshed);
+        Ok(())
     }
 
     async fn refresh_tokens(

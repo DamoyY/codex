@@ -5,6 +5,10 @@ use crate::codex_message_processor::CodexMessageProcessor;
 use crate::config_api::ConfigApi;
 use crate::error_code::INVALID_REQUEST_ERROR_CODE;
 use crate::outgoing_message::OutgoingMessageSender;
+use async_trait::async_trait;
+use codex_app_server_protocol::AccountRefreshAuthTokenParams;
+use codex_app_server_protocol::AccountRefreshAuthTokenReason;
+use codex_app_server_protocol::AccountRefreshAuthTokenResponse;
 use codex_app_server_protocol::ClientInfo;
 use codex_app_server_protocol::ClientRequest;
 use codex_app_server_protocol::ConfigBatchWriteParams;
@@ -19,8 +23,13 @@ use codex_app_server_protocol::JSONRPCRequest;
 use codex_app_server_protocol::JSONRPCResponse;
 use codex_app_server_protocol::RequestId;
 use codex_app_server_protocol::ServerNotification;
+use codex_app_server_protocol::ServerRequestPayload;
 use codex_core::AuthManager;
 use codex_core::ThreadManager;
+use codex_core::auth::ExternalAuthRefreshContext;
+use codex_core::auth::ExternalAuthRefreshReason;
+use codex_core::auth::ExternalAuthRefresher;
+use codex_core::auth::ExternalAuthState;
 use codex_core::config::Config;
 use codex_core::config_loader::LoaderOverrides;
 use codex_core::default_client::SetOriginatorError;
@@ -32,6 +41,49 @@ use codex_protocol::ThreadId;
 use codex_protocol::protocol::SessionSource;
 use tokio::sync::broadcast;
 use toml::Value as TomlValue;
+
+#[derive(Clone)]
+struct ExternalAuthRefreshBridge {
+    outgoing: Arc<OutgoingMessageSender>,
+}
+
+impl ExternalAuthRefreshBridge {
+    fn map_reason(reason: ExternalAuthRefreshReason) -> AccountRefreshAuthTokenReason {
+        match reason {
+            ExternalAuthRefreshReason::Unauthorized => AccountRefreshAuthTokenReason::Unauthorized,
+            ExternalAuthRefreshReason::Manual => AccountRefreshAuthTokenReason::Manual,
+        }
+    }
+}
+
+#[async_trait]
+impl ExternalAuthRefresher for ExternalAuthRefreshBridge {
+    async fn refresh(
+        &self,
+        context: ExternalAuthRefreshContext,
+    ) -> std::io::Result<ExternalAuthState> {
+        let params = AccountRefreshAuthTokenParams {
+            reason: Self::map_reason(context.reason),
+            previous_account_id: context.previous_account_id,
+        };
+        let rx = self
+            .outgoing
+            .send_request(ServerRequestPayload::AccountRefreshAuthToken(params))
+            .await;
+        let result = rx.await.map_err(|err| {
+            std::io::Error::other(format!("auth refresh request canceled: {err}"))
+        })?;
+        let response: AccountRefreshAuthTokenResponse =
+            serde_json::from_value(result).map_err(std::io::Error::other)?;
+
+        Ok(ExternalAuthState {
+            token: response.token,
+            account_id: response.account_id,
+            email: response.email,
+            plan_type: response.plan_type,
+        })
+    }
+}
 
 pub(crate) struct MessageProcessor {
     outgoing: Arc<OutgoingMessageSender>,
@@ -59,6 +111,9 @@ impl MessageProcessor {
             false,
             config.cli_auth_credentials_store_mode,
         );
+        auth_manager.set_external_auth_refresher(Arc::new(ExternalAuthRefreshBridge {
+            outgoing: outgoing.clone(),
+        }));
         let thread_manager = Arc::new(ThreadManager::new(
             config.codex_home.clone(),
             auth_manager.clone(),

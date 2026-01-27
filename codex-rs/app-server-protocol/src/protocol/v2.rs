@@ -874,6 +874,51 @@ pub struct LogoutAccountResponse {}
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, JsonSchema, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export_to = "v2/")]
+pub struct SetAuthTokenParams {
+    /// Access token (JWT) supplied by the embedding parent application.
+    pub token: String,
+    /// Optional workspace/account identifier associated with the token.
+    pub account_id: Option<String>,
+    /// Optional email address for display in account/read.
+    pub email: Option<String>,
+    /// Optional plan type for display in account/read.
+    pub plan_type: Option<PlanType>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, JsonSchema, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export_to = "v2/")]
+pub struct SetAuthTokenResponse {}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, JsonSchema, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export_to = "v2/")]
+pub enum AccountRefreshAuthTokenReason {
+    Unauthorized,
+    Manual,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, JsonSchema, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export_to = "v2/")]
+pub struct AccountRefreshAuthTokenParams {
+    pub reason: AccountRefreshAuthTokenReason,
+    pub previous_account_id: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, JsonSchema, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export_to = "v2/")]
+pub struct AccountRefreshAuthTokenResponse {
+    pub token: String,
+    pub account_id: Option<String>,
+    pub email: Option<String>,
+    pub plan_type: Option<PlanType>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, JsonSchema, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export_to = "v2/")]
 pub struct GetAccountRateLimitsResponse {
     pub rate_limits: RateLimitSnapshot,
 }

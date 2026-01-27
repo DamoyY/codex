@@ -4,8 +4,13 @@ use app_test_support::McpProcess;
 use app_test_support::to_response;
 
 use app_test_support::ChatGptAuthFixture;
+use app_test_support::ChatGptIdTokenClaims;
+use app_test_support::encode_id_token;
 use app_test_support::write_chatgpt_auth;
+use app_test_support::write_models_cache;
 use codex_app_server_protocol::Account;
+use codex_app_server_protocol::AccountRefreshAuthTokenReason;
+use codex_app_server_protocol::AccountRefreshAuthTokenResponse;
 use codex_app_server_protocol::AuthMode;
 use codex_app_server_protocol::CancelLoginAccountParams;
 use codex_app_server_protocol::CancelLoginAccountResponse;
@@ -17,15 +22,22 @@ use codex_app_server_protocol::LoginAccountResponse;
 use codex_app_server_protocol::LogoutAccountResponse;
 use codex_app_server_protocol::RequestId;
 use codex_app_server_protocol::ServerNotification;
+use codex_app_server_protocol::ServerRequest;
+use codex_app_server_protocol::SetAuthTokenParams;
+use codex_app_server_protocol::SetAuthTokenResponse;
 use codex_core::auth::AuthCredentialsStoreMode;
 use codex_login::login_with_api_key;
 use codex_protocol::account::PlanType as AccountPlanType;
+use core_test_support::responses;
 use pretty_assertions::assert_eq;
+use serde_json::json;
 use serial_test::serial;
 use std::path::Path;
 use std::time::Duration;
 use tempfile::TempDir;
 use tokio::time::timeout;
+use wiremock::MockServer;
+use wiremock::ResponseTemplate;
 
 const DEFAULT_READ_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(10);
 
@@ -35,10 +47,14 @@ struct CreateConfigTomlParams {
     forced_method: Option<String>,
     forced_workspace_id: Option<String>,
     requires_openai_auth: Option<bool>,
+    base_url: Option<String>,
 }
 
 fn create_config_toml(codex_home: &Path, params: CreateConfigTomlParams) -> std::io::Result<()> {
     let config_toml = codex_home.join("config.toml");
+    let base_url = params
+        .base_url
+        .unwrap_or_else(|| "http://127.0.0.1:0/v1".to_string());
     let forced_line = if let Some(method) = params.forced_method {
         format!("forced_login_method = \"{method}\"\n")
     } else {
@@ -66,7 +82,7 @@ model_provider = "mock_provider"
 
 [model_providers.mock_provider]
 name = "Mock provider for test"
-base_url = "http://127.0.0.1:0/v1"
+base_url = "{base_url}"
 wire_api = "responses"
 request_max_retries = 0
 stream_max_retries = 0
@@ -130,6 +146,215 @@ async fn logout_account_removes_auth_and_notifies() -> Result<()> {
     .await??;
     let account: GetAccountResponse = to_response(get_resp)?;
     assert_eq!(account.account, None);
+    Ok(())
+}
+
+#[tokio::test]
+async fn set_auth_token_updates_account_and_notifies() -> Result<()> {
+    let codex_home = TempDir::new()?;
+    let mock_server = MockServer::start().await;
+    create_config_toml(
+        codex_home.path(),
+        CreateConfigTomlParams {
+            requires_openai_auth: Some(true),
+            base_url: Some(format!("{}/v1", mock_server.uri())),
+            ..Default::default()
+        },
+    )?;
+    write_models_cache(codex_home.path())?;
+
+    let token = encode_id_token(
+        &ChatGptIdTokenClaims::new()
+            .email("embedded@example.com")
+            .plan_type("pro")
+            .chatgpt_account_id("org-embedded"),
+    )?;
+
+    let mut mcp = McpProcess::new_with_env(codex_home.path(), &[("OPENAI_API_KEY", None)]).await?;
+    timeout(DEFAULT_READ_TIMEOUT, mcp.initialize()).await??;
+
+    let set_id = mcp
+        .send_set_auth_token_request(SetAuthTokenParams {
+            token: token.clone(),
+            account_id: Some("org-embedded".to_string()),
+            email: Some("embedded@example.com".to_string()),
+            plan_type: Some(AccountPlanType::Pro),
+        })
+        .await?;
+    let set_resp: JSONRPCResponse = timeout(
+        DEFAULT_READ_TIMEOUT,
+        mcp.read_stream_until_response_message(RequestId::Integer(set_id)),
+    )
+    .await??;
+    let _ok: SetAuthTokenResponse = to_response(set_resp)?;
+
+    let note = timeout(
+        DEFAULT_READ_TIMEOUT,
+        mcp.read_stream_until_notification_message("account/updated"),
+    )
+    .await??;
+    let parsed: ServerNotification = note.try_into()?;
+    let ServerNotification::AccountUpdated(payload) = parsed else {
+        bail!("unexpected notification: {parsed:?}");
+    };
+    assert_eq!(payload.auth_mode, Some(AuthMode::ChatGPT));
+
+    let get_id = mcp
+        .send_get_account_request(GetAccountParams {
+            refresh_token: false,
+        })
+        .await?;
+    let get_resp: JSONRPCResponse = timeout(
+        DEFAULT_READ_TIMEOUT,
+        mcp.read_stream_until_response_message(RequestId::Integer(get_id)),
+    )
+    .await??;
+    let account: GetAccountResponse = to_response(get_resp)?;
+    assert_eq!(
+        account,
+        GetAccountResponse {
+            account: Some(Account::Chatgpt {
+                email: "embedded@example.com".to_string(),
+                plan_type: AccountPlanType::Pro,
+            }),
+            requires_openai_auth: true,
+        }
+    );
+
+    Ok(())
+}
+
+async fn respond_to_refresh_request(mcp: &mut McpProcess, token: &str) -> Result<()> {
+    let refresh_req: ServerRequest = timeout(
+        DEFAULT_READ_TIMEOUT,
+        mcp.read_stream_until_request_message(),
+    )
+    .await??;
+    let ServerRequest::AccountRefreshAuthToken { request_id, params } = refresh_req else {
+        bail!("expected account/refreshAuthToken request, got {refresh_req:?}");
+    };
+    assert_eq!(params.reason, AccountRefreshAuthTokenReason::Unauthorized);
+    let response = AccountRefreshAuthTokenResponse {
+        token: token.to_string(),
+        account_id: Some("org-refreshed".to_string()),
+        email: Some("refreshed@example.com".to_string()),
+        plan_type: Some(AccountPlanType::Pro),
+    };
+    mcp.send_response(request_id, serde_json::to_value(response)?)
+        .await?;
+    Ok(())
+}
+
+#[tokio::test]
+async fn external_auth_refreshes_on_unauthorized() -> Result<()> {
+    let codex_home = TempDir::new()?;
+    let mock_server = MockServer::start().await;
+    create_config_toml(
+        codex_home.path(),
+        CreateConfigTomlParams {
+            requires_openai_auth: Some(true),
+            base_url: Some(format!("{}/v1", mock_server.uri())),
+            ..Default::default()
+        },
+    )?;
+    write_models_cache(codex_home.path())?;
+
+    let success_sse = responses::sse(vec![
+        responses::ev_response_created("resp-turn"),
+        responses::ev_assistant_message("msg-turn", "turn ok"),
+        responses::ev_completed("resp-turn"),
+    ]);
+    let unauthorized = ResponseTemplate::new(401).set_body_json(json!({
+        "error": { "message": "unauthorized" }
+    }));
+    let responses_mock = responses::mount_response_sequence(
+        &mock_server,
+        vec![unauthorized, responses::sse_response(success_sse)],
+    )
+    .await;
+
+    let initial_token = encode_id_token(
+        &ChatGptIdTokenClaims::new()
+            .email("initial@example.com")
+            .plan_type("pro")
+            .chatgpt_account_id("org-initial"),
+    )?;
+    let refreshed_token = encode_id_token(
+        &ChatGptIdTokenClaims::new()
+            .email("refreshed@example.com")
+            .plan_type("pro")
+            .chatgpt_account_id("org-refreshed"),
+    )?;
+
+    let mut mcp = McpProcess::new_with_env(codex_home.path(), &[("OPENAI_API_KEY", None)]).await?;
+    timeout(DEFAULT_READ_TIMEOUT, mcp.initialize()).await??;
+
+    let set_id = mcp
+        .send_set_auth_token_request(SetAuthTokenParams {
+            token: initial_token.clone(),
+            account_id: Some("org-initial".to_string()),
+            email: Some("initial@example.com".to_string()),
+            plan_type: Some(AccountPlanType::Pro),
+        })
+        .await?;
+    let set_resp: JSONRPCResponse = timeout(
+        DEFAULT_READ_TIMEOUT,
+        mcp.read_stream_until_response_message(RequestId::Integer(set_id)),
+    )
+    .await??;
+    let _ok: SetAuthTokenResponse = to_response(set_resp)?;
+    let _updated = timeout(
+        DEFAULT_READ_TIMEOUT,
+        mcp.read_stream_until_notification_message("account/updated"),
+    )
+    .await??;
+
+    let thread_req = mcp
+        .send_thread_start_request(codex_app_server_protocol::ThreadStartParams {
+            model: Some("mock-model".to_string()),
+            ..Default::default()
+        })
+        .await?;
+    let thread_resp: JSONRPCResponse = timeout(
+        DEFAULT_READ_TIMEOUT,
+        mcp.read_stream_until_response_message(RequestId::Integer(thread_req)),
+    )
+    .await??;
+    let thread = to_response::<codex_app_server_protocol::ThreadStartResponse>(thread_resp)?;
+
+    let turn_req = mcp
+        .send_turn_start_request(codex_app_server_protocol::TurnStartParams {
+            thread_id: thread.thread.id,
+            input: vec![codex_app_server_protocol::UserInput::Text {
+                text: "Hello".to_string(),
+                text_elements: Vec::new(),
+            }],
+            ..Default::default()
+        })
+        .await?;
+    respond_to_refresh_request(&mut mcp, &refreshed_token).await?;
+    let _turn_resp: JSONRPCResponse = timeout(
+        DEFAULT_READ_TIMEOUT,
+        mcp.read_stream_until_response_message(RequestId::Integer(turn_req)),
+    )
+    .await??;
+    let _turn_completed = timeout(
+        DEFAULT_READ_TIMEOUT,
+        mcp.read_stream_until_notification_message("turn/completed"),
+    )
+    .await??;
+
+    let requests = responses_mock.requests();
+    assert_eq!(requests.len(), 2);
+    assert_eq!(
+        requests[0].header("authorization"),
+        Some(format!("Bearer {initial_token}"))
+    );
+    assert_eq!(
+        requests[1].header("authorization"),
+        Some(format!("Bearer {refreshed_token}"))
+    );
+
     Ok(())
 }
 

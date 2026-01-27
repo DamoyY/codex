@@ -89,6 +89,8 @@ use codex_app_server_protocol::SendUserTurnParams;
 use codex_app_server_protocol::SendUserTurnResponse;
 use codex_app_server_protocol::ServerNotification;
 use codex_app_server_protocol::SessionConfiguredNotification;
+use codex_app_server_protocol::SetAuthTokenParams;
+use codex_app_server_protocol::SetAuthTokenResponse;
 use codex_app_server_protocol::SetDefaultModelParams;
 use codex_app_server_protocol::SetDefaultModelResponse;
 use codex_app_server_protocol::SkillsConfigWriteParams;
@@ -141,6 +143,7 @@ use codex_core::ThreadConfigSnapshot;
 use codex_core::ThreadManager;
 use codex_core::ThreadSortKey as CoreThreadSortKey;
 use codex_core::auth::CLIENT_ID;
+use codex_core::auth::ExternalAuthState;
 use codex_core::auth::login_with_api_key;
 use codex_core::config::Config;
 use codex_core::config::ConfigOverrides;
@@ -494,6 +497,9 @@ impl CodexMessageProcessor {
             } => {
                 self.logout_v2(request_id).await;
             }
+            ClientRequest::SetAuthToken { request_id, params } => {
+                self.set_auth_token(request_id, params).await;
+            }
             ClientRequest::CancelLoginAccount { request_id, params } => {
                 self.cancel_login_v2(request_id, params).await;
             }
@@ -610,10 +616,23 @@ impl CodexMessageProcessor {
         }
     }
 
+    fn external_auth_active_error(&self) -> JSONRPCErrorError {
+        JSONRPCErrorError {
+            code: INVALID_REQUEST_ERROR_CODE,
+            message:
+                "External auth is active. Use account/setAuthToken to update it or account/logout to clear it."
+                    .to_string(),
+            data: None,
+        }
+    }
+
     async fn login_api_key_common(
         &mut self,
         params: &LoginApiKeyParams,
     ) -> std::result::Result<(), JSONRPCErrorError> {
+        if self.auth_manager.is_external_auth_active() {
+            return Err(self.external_auth_active_error());
+        }
         if matches!(
             self.config.forced_login_method,
             Some(ForcedLoginMethod::Chatgpt)
@@ -705,6 +724,10 @@ impl CodexMessageProcessor {
         &self,
     ) -> std::result::Result<LoginServerOptions, JSONRPCErrorError> {
         let config = self.config.as_ref();
+
+        if self.auth_manager.is_external_auth_active() {
+            return Err(self.external_auth_active_error());
+        }
 
         if matches!(config.forced_login_method, Some(ForcedLoginMethod::Api)) {
             return Err(JSONRPCErrorError {
@@ -964,6 +987,56 @@ impl CodexMessageProcessor {
         }
     }
 
+    async fn set_auth_token(&mut self, request_id: RequestId, params: SetAuthTokenParams) {
+        if matches!(
+            self.config.forced_login_method,
+            Some(ForcedLoginMethod::Api)
+        ) {
+            let error = JSONRPCErrorError {
+                code: INVALID_REQUEST_ERROR_CODE,
+                message: "External ChatGPT auth is disabled. Use API key login instead."
+                    .to_string(),
+                data: None,
+            };
+            self.outgoing.send_error(request_id, error).await;
+            return;
+        }
+
+        if let Some(expected_workspace) = self.config.forced_chatgpt_workspace_id.as_deref()
+            && params.account_id.as_deref() != Some(expected_workspace)
+        {
+            let error = JSONRPCErrorError {
+                code: INVALID_REQUEST_ERROR_CODE,
+                message: format!(
+                    "External auth must use workspace {expected_workspace}, but received {:?}.",
+                    params.account_id
+                ),
+                data: None,
+            };
+            self.outgoing.send_error(request_id, error).await;
+            return;
+        }
+
+        let external = ExternalAuthState {
+            token: params.token,
+            account_id: params.account_id,
+            email: params.email,
+            plan_type: params.plan_type,
+        };
+        let _changed = self.auth_manager.set_external_auth(external);
+
+        self.outgoing
+            .send_response(request_id, SetAuthTokenResponse {})
+            .await;
+
+        let payload_v2 = AccountUpdatedNotification {
+            auth_mode: self.auth_manager.get_auth_mode(),
+        };
+        self.outgoing
+            .send_server_notification(ServerNotification::AccountUpdated(payload_v2))
+            .await;
+    }
+
     async fn logout_common(&mut self) -> std::result::Result<Option<AuthMode>, JSONRPCErrorError> {
         // Cancel any active login attempt.
         {
@@ -972,6 +1045,8 @@ impl CodexMessageProcessor {
                 drop(active);
             }
         }
+
+        let _cleared_external = self.auth_manager.clear_external_auth();
 
         if let Err(err) = self.auth_manager.logout() {
             return Err(JSONRPCErrorError {

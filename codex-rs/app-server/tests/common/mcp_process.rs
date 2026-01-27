@@ -44,6 +44,7 @@ use codex_app_server_protocol::ReviewStartParams;
 use codex_app_server_protocol::SendUserMessageParams;
 use codex_app_server_protocol::SendUserTurnParams;
 use codex_app_server_protocol::ServerRequest;
+use codex_app_server_protocol::SetAuthTokenParams;
 use codex_app_server_protocol::SetDefaultModelParams;
 use codex_app_server_protocol::ThreadArchiveParams;
 use codex_app_server_protocol::ThreadForkParams;
@@ -296,6 +297,15 @@ impl McpProcess {
     ) -> anyhow::Result<i64> {
         let params = Some(serde_json::to_value(params)?);
         self.send_request("account/read", params).await
+    }
+
+    /// Send an `account/setAuthToken` JSON-RPC request.
+    pub async fn send_set_auth_token_request(
+        &mut self,
+        params: SetAuthTokenParams,
+    ) -> anyhow::Result<i64> {
+        let params = Some(serde_json::to_value(params)?);
+        self.send_request("account/setAuthToken", params).await
     }
 
     /// Send a `feedback/upload` JSON-RPC request.

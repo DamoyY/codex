@@ -202,6 +202,11 @@ client_request_definitions! {
         response: v2::LogoutAccountResponse,
     },
 
+    SetAuthToken => "account/setAuthToken" {
+        params: v2::SetAuthTokenParams,
+        response: v2::SetAuthTokenResponse,
+    },
+
     GetAccountRateLimits => "account/rateLimits/read" {
         params: #[ts(type = "undefined")] #[serde(skip_serializing_if = "Option::is_none")] Option<()>,
         response: v2::GetAccountRateLimitsResponse,
@@ -534,6 +539,11 @@ server_request_definitions! {
         response: v2::DynamicToolCallResponse,
     },
 
+    AccountRefreshAuthToken => "account/refreshAuthToken" {
+        params: v2::AccountRefreshAuthTokenParams,
+        response: v2::AccountRefreshAuthTokenResponse,
+    },
+
     /// DEPRECATED APIs below
     /// Request to approve a patch.
     /// This request is used for Turns started via the legacy APIs (i.e. SendUserTurn, SendUserMessage).
@@ -753,6 +763,29 @@ mod tests {
     }
 
     #[test]
+    fn serialize_account_refresh_auth_token_request() -> Result<()> {
+        let request = ServerRequest::AccountRefreshAuthToken {
+            request_id: RequestId::Integer(8),
+            params: v2::AccountRefreshAuthTokenParams {
+                reason: v2::AccountRefreshAuthTokenReason::Unauthorized,
+                previous_account_id: Some("org-123".to_string()),
+            },
+        };
+        assert_eq!(
+            json!({
+                "method": "account/refreshAuthToken",
+                "id": 8,
+                "params": {
+                    "reason": "unauthorized",
+                    "previousAccountId": "org-123"
+                }
+            }),
+            serde_json::to_value(&request)?,
+        );
+        Ok(())
+    }
+
+    #[test]
     fn serialize_get_account_rate_limits() -> Result<()> {
         let request = ClientRequest::GetAccountRateLimits {
             request_id: RequestId::Integer(1),
@@ -842,9 +875,36 @@ mod tests {
     }
 
     #[test]
+    fn serialize_set_auth_token() -> Result<()> {
+        let request = ClientRequest::SetAuthToken {
+            request_id: RequestId::Integer(5),
+            params: v2::SetAuthTokenParams {
+                token: "jwt-token".to_string(),
+                account_id: Some("org-123".to_string()),
+                email: Some("user@example.com".to_string()),
+                plan_type: Some(PlanType::Pro),
+            },
+        };
+        assert_eq!(
+            json!({
+                "method": "account/setAuthToken",
+                "id": 5,
+                "params": {
+                    "token": "jwt-token",
+                    "accountId": "org-123",
+                    "email": "user@example.com",
+                    "planType": "pro"
+                }
+            }),
+            serde_json::to_value(&request)?,
+        );
+        Ok(())
+    }
+
+    #[test]
     fn serialize_get_account() -> Result<()> {
         let request = ClientRequest::GetAccount {
-            request_id: RequestId::Integer(5),
+            request_id: RequestId::Integer(6),
             params: v2::GetAccountParams {
                 refresh_token: false,
             },
@@ -852,7 +912,7 @@ mod tests {
         assert_eq!(
             json!({
                 "method": "account/read",
-                "id": 5,
+                "id": 6,
                 "params": {
                     "refreshToken": false
                 }
