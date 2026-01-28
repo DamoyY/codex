@@ -825,14 +825,14 @@ pub enum LoginAccountParams {
     #[serde(rename = "chatgptAuthTokens")]
     #[ts(rename = "chatgptAuthTokens")]
     ChatgptAuthTokens {
-        /// ID token (JWT) supplied by the parent application.
+        /// ID token (JWT) supplied by the client.
         ///
         /// This token is used for identity and account metadata (email, plan type,
         /// workspace id).
         #[serde(rename = "idToken")]
         #[ts(rename = "idToken")]
         id_token: String,
-        /// Access token (JWT) supplied by the parent application.
+        /// Access token (JWT) supplied by the client.
         /// This token is used for backend API requests.
         #[serde(rename = "accessToken")]
         #[ts(rename = "accessToken")]
