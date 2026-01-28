@@ -109,9 +109,8 @@ impl PendingUserInput {
         &mut self,
         update: RequestUserInputResponse,
     ) -> RequestUserInputResponse {
-        for (id, answer) in update.answers {
-            self.answers.insert(id, answer);
-        }
+        let RequestUserInputResponse { answers } = update;
+        self.answers = answers;
         RequestUserInputResponse {
             answers: self.answers.clone(),
         }
