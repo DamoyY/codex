@@ -910,7 +910,7 @@ impl AuthManager {
 
     fn set_managed_auth(&self, new_auth: Option<CodexAuth>) -> bool {
         if let Ok(mut guard) = self.inner.write() {
-            let previous = guard.state.managed_auth().map(Clone::clone);
+            let previous = guard.state.managed_auth().cloned();
             let changed = !AuthManager::auths_equal(previous.as_ref(), new_auth.as_ref());
             tracing::info!("Reloaded auth, changed: {changed}");
             guard.state = match guard.state.clone() {
