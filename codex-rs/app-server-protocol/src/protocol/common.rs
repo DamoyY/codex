@@ -28,6 +28,10 @@ impl GitSha {
 pub enum AuthMode {
     ApiKey,
     ChatGPT,
+    #[serde(rename = "chatgptAuthTokens")]
+    #[ts(rename = "chatgptAuthTokens")]
+    #[strum(serialize = "chatgptAuthTokens")]
+    ChatgptAuthTokens,
 }
 
 /// Generates an `enum ClientRequest` where each variant is a request that the

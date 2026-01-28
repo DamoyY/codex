@@ -1218,7 +1218,7 @@ impl CodexMessageProcessor {
         let account = match self.auth_manager.auth_cached() {
             Some(auth) => Some(match auth.mode {
                 AuthMode::ApiKey => Account::ApiKey {},
-                AuthMode::ChatGPT => {
+                AuthMode::ChatGPT | AuthMode::ChatgptAuthTokens => {
                     let email = auth.get_account_email();
                     let plan_type = auth.account_plan_type();
 
@@ -1277,7 +1277,7 @@ impl CodexMessageProcessor {
             });
         };
 
-        if auth.mode != AuthMode::ChatGPT {
+        if !matches!(auth.mode, AuthMode::ChatGPT | AuthMode::ChatgptAuthTokens) {
             return Err(JSONRPCErrorError {
                 code: INVALID_REQUEST_ERROR_CODE,
                 message: "chatgpt authentication required to read rate limits".to_string(),

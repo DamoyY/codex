@@ -139,7 +139,7 @@ impl CodexAuth {
     pub fn get_token(&self) -> Result<String, std::io::Error> {
         match self.mode {
             AuthMode::ApiKey => Ok(self.api_key.clone().unwrap_or_default()),
-            AuthMode::ChatGPT => {
+            AuthMode::ChatGPT | AuthMode::ChatgptAuthTokens => {
                 let id_token = self.get_token_data()?.access_token;
                 Ok(id_token)
             }
@@ -301,8 +301,8 @@ pub fn enforce_login_restrictions(config: &Config) -> std::io::Result<()> {
     if let Some(required_method) = config.forced_login_method {
         let method_violation = match (required_method, auth.mode) {
             (ForcedLoginMethod::Api, AuthMode::ApiKey) => None,
-            (ForcedLoginMethod::Chatgpt, AuthMode::ChatGPT) => None,
-            (ForcedLoginMethod::Api, AuthMode::ChatGPT) => Some(
+            (ForcedLoginMethod::Chatgpt, AuthMode::ChatGPT | AuthMode::ChatgptAuthTokens) => None,
+            (ForcedLoginMethod::Api, AuthMode::ChatGPT | AuthMode::ChatgptAuthTokens) => Some(
                 "API key login is required, but ChatGPT is currently being used. Logging out."
                     .to_string(),
             ),
@@ -322,7 +322,7 @@ pub fn enforce_login_restrictions(config: &Config) -> std::io::Result<()> {
     }
 
     if let Some(expected_account_id) = config.forced_chatgpt_workspace_id.as_deref() {
-        if auth.mode != AuthMode::ChatGPT {
+        if !matches!(auth.mode, AuthMode::ChatGPT | AuthMode::ChatgptAuthTokens) {
             return Ok(());
         }
 
@@ -696,11 +696,9 @@ impl UnauthorizedRecovery {
     }
 
     pub fn has_next(&self) -> bool {
-        if !self
-            .manager
-            .auth_cached()
-            .is_some_and(|auth| auth.mode == AuthMode::ChatGPT)
-        {
+        if !self.manager.auth_cached().is_some_and(|auth| {
+            matches!(auth.mode, AuthMode::ChatGPT | AuthMode::ChatgptAuthTokens)
+        }) {
             return false;
         }
 
@@ -966,7 +964,7 @@ impl AuthManager {
         let client = crate::default_client::create_client();
         let auth_dot_json = auth_dot_json_from_external(&external, id_token);
         let external_auth = CodexAuth {
-            mode: AuthMode::ChatGPT,
+            mode: AuthMode::ChatgptAuthTokens,
             api_key: None,
             auth_dot_json: Arc::new(Mutex::new(Some(auth_dot_json))),
             storage,
