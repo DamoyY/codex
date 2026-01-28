@@ -612,7 +612,7 @@ impl RequestUserInputOverlay {
     }
 
     /// Synchronize selection state to the currently focused option.
-    fn select_current_option(&mut self, committed: bool) {
+    fn select_current_option(&mut self) {
         if !self.has_options() {
             return;
         }
@@ -620,7 +620,7 @@ impl RequestUserInputOverlay {
         let updated = if let Some(answer) = self.current_answer_mut() {
             answer.options_ui_state.clamp_selection(options_len);
             answer.committed_option_idx = answer.options_ui_state.selected_idx;
-            answer.answer_committed = committed;
+            answer.answer_committed = false;
             true
         } else {
             false
@@ -665,7 +665,9 @@ impl RequestUserInputOverlay {
         let question = self.request.questions.get(idx)?;
         let answer_state = self.answers.get(idx)?;
         if !answer_state.answer_committed {
-            return include_empty.then_some(RequestUserInputAnswer { answers: Vec::new() });
+            return include_empty.then_some(RequestUserInputAnswer {
+                answers: Vec::new(),
+            });
         }
         let has_options = question
             .options
@@ -1140,7 +1142,7 @@ impl BottomPaneView for RequestUserInputOverlay {
                         }
                     }
                     KeyCode::Char(' ') => {
-                        self.select_current_option(false);
+                        self.select_current_option();
                     }
                     KeyCode::Backspace | KeyCode::Delete => {
                         self.clear_selection();
@@ -1154,8 +1156,9 @@ impl BottomPaneView for RequestUserInputOverlay {
                     KeyCode::Enter => {
                         let has_selection = self.selected_option_index().is_some();
                         if has_selection {
-                            self.select_current_option(true);
-                        } else if let Some(answer) = self.current_answer_mut() {
+                            self.select_current_option();
+                        }
+                        if let Some(answer) = self.current_answer_mut() {
                             answer.answer_committed = true;
                         }
                         self.go_next_or_submit();
@@ -1165,7 +1168,10 @@ impl BottomPaneView for RequestUserInputOverlay {
                             if let Some(answer) = self.current_answer_mut() {
                                 answer.options_ui_state.selected_idx = Some(option_idx);
                             }
-                            self.select_current_option(true);
+                            self.select_current_option();
+                            if let Some(answer) = self.current_answer_mut() {
+                                answer.answer_committed = true;
+                            }
                             self.go_next_or_submit();
                         }
                     }
@@ -1204,7 +1210,10 @@ impl BottomPaneView for RequestUserInputOverlay {
                     if !self.handle_composer_input_result(result) {
                         self.pending_submission_draft = None;
                         if self.has_options() {
-                            self.select_current_option(true);
+                            self.select_current_option();
+                            if let Some(answer) = self.current_answer_mut() {
+                                answer.answer_committed = true;
+                            }
                         }
                         self.go_next_or_submit();
                     }
@@ -1797,10 +1806,7 @@ mod tests {
             .answers
             .get(INTERRUPTED_ANSWER_ID)
             .expect("interrupt marker missing");
-        assert_eq!(
-            marker.answers,
-            vec![INTERRUPTED_ANSWER_TEXT.to_string()]
-        );
+        assert_eq!(marker.answers, vec![INTERRUPTED_ANSWER_TEXT.to_string()]);
 
         let event = rx.try_recv().expect("expected interrupt AppEvent");
         let AppEvent::CodexOp(op) = event else {
@@ -1831,10 +1837,7 @@ mod tests {
             .answers
             .get(INTERRUPTED_ANSWER_ID)
             .expect("interrupt marker missing");
-        assert_eq!(
-            marker.answers,
-            vec![INTERRUPTED_ANSWER_TEXT.to_string()]
-        );
+        assert_eq!(marker.answers, vec![INTERRUPTED_ANSWER_TEXT.to_string()]);
 
         let event = rx.try_recv().expect("expected interrupt AppEvent");
         let AppEvent::CodexOp(op) = event else {
@@ -1906,10 +1909,7 @@ mod tests {
             .answers
             .get(INTERRUPTED_ANSWER_ID)
             .expect("interrupt marker missing");
-        assert_eq!(
-            marker.answers,
-            vec![INTERRUPTED_ANSWER_TEXT.to_string()]
-        );
+        assert_eq!(marker.answers, vec![INTERRUPTED_ANSWER_TEXT.to_string()]);
         assert!(
             !response.answers.contains_key("q1"),
             "did not expect committed answer"
@@ -1954,10 +1954,7 @@ mod tests {
             .answers
             .get(INTERRUPTED_ANSWER_ID)
             .expect("interrupt marker missing");
-        assert_eq!(
-            marker.answers,
-            vec![INTERRUPTED_ANSWER_TEXT.to_string()]
-        );
+        assert_eq!(marker.answers, vec![INTERRUPTED_ANSWER_TEXT.to_string()]);
 
         let event = rx.try_recv().expect("expected interrupt AppEvent");
         let AppEvent::CodexOp(op) = event else {
@@ -2241,14 +2238,13 @@ mod tests {
             let answer = overlay.current_answer_mut().expect("answer missing");
             answer.options_ui_state.selected_idx = Some(1);
         }
-        overlay.select_current_option(false);
+        overlay.select_current_option();
         overlay
             .composer
             .set_text_content("Notes for option 2".to_string(), Vec::new(), Vec::new());
         overlay.composer.move_cursor_to_end();
-        let draft = overlay.capture_composer_draft();
+        overlay.save_current_draft();
         if let Some(answer) = overlay.current_answer_mut() {
-            answer.draft = draft;
             answer.answer_committed = true;
         }
 
@@ -2331,9 +2327,8 @@ mod tests {
             .composer
             .set_text_content("Custom answer".to_string(), Vec::new(), Vec::new());
         overlay.composer.move_cursor_to_end();
-        let draft = overlay.capture_composer_draft();
+        overlay.save_current_draft();
         if let Some(answer) = overlay.current_answer_mut() {
-            answer.draft = draft;
             answer.answer_committed = true;
         }
 
@@ -2754,7 +2749,7 @@ mod tests {
             false,
             false,
         );
-        overlay.select_current_option(false);
+        overlay.select_current_option();
         overlay.focus = Focus::Notes;
         overlay
             .composer
