@@ -113,7 +113,7 @@ pub enum Feature {
     SkillMcpDependencyInstall,
     /// Steer feature flag - when enabled, Enter submits immediately instead of queuing.
     Steer,
-    /// Enable collaboration modes (Plan, Code, Pair Programming, Execute).
+    /// Enable collaboration modes (Plan, Agent, Pair Programming, Execute).
     CollaborationModes,
     /// Use the Responses API WebSocket transport for OpenAI by default.
     ResponsesWebsockets,

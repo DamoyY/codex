@@ -353,7 +353,7 @@
       "description": "Initial collaboration mode to use when the TUI starts.",
       "enum": [
         "plan",
-        "code",
+        "agent",
         "pair_programming",
         "execute",
         "custom"
