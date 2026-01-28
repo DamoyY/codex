@@ -19,7 +19,6 @@ members = [
     "exec",
     "exec-server",
     "execpolicy",
-    "execpolicy-legacy",
     "keyring-store",
     "file-search",
     "linux-sandbox",
@@ -51,7 +50,7 @@ members = [
 resolver = "2"
 
 [workspace.package]
-version = "999.999.999"
+version = "99.99.99"
 # Track the edition for all workspace crates in one place. Individual
 # crates can still override this value, but keeping it here means new
 # crates created with `cargo new -w ...` automatically inherit the 2024
@@ -109,7 +108,7 @@ mcp_test_support = { path = "mcp-server/tests/common" }
 
 # External
 allocative = "*"
-ansi-to-tui = "*"
+ansi-to-tui = "7"
 anyhow = "*"
 arboard = { version = "*", features = ["wayland-data-control"] }
 assert_cmd = "*"
@@ -125,7 +124,7 @@ chrono = "*"
 clap = "*"
 clap_complete = "*"
 color-eyre = "*"
-crossterm = "*"
+crossterm = "0.28.1"
 ctor = "*"
 derive_more = "*"
 diffy = "*"
@@ -174,9 +173,9 @@ pathdiff = "*"
 portable-pty = "*"
 predicates = "*"
 pretty_assertions = "*"
-pulldown-cmark = "*"
+pulldown-cmark = "0.10"
 rand = "*"
-ratatui = "*"
+ratatui = "0.29.0"
 ratatui-macros = "*"
 regex = "*"
 regex-lite = "*"
@@ -253,8 +252,8 @@ zeroize = "*"
 ignored = ["icu_provider", "openssl-sys", "codex-utils-readiness"]
 
 [profile.release]
-panic = "abort"
 lto = "fat"
+panic = "abort"
 # Because we bundle some of these executables with the TypeScript CLI, we
 # remove everything to make the binary as small as possible.
 strip = "symbols"
@@ -270,7 +269,6 @@ opt-level = 0
 [patch.crates-io]
 # Uncomment to debug local changes.
 # ratatui = { path = "../../ratatui" }
-crossterm = { git = "https://github.com/nornagon/crossterm", branch = "nornagon/color-query" }
 tokio-tungstenite = { git = "https://github.com/JakkuSakura/tokio-tungstenite", rev = "2ae536b0de793f3ddf31fc2f22d445bf1ef2023d" }
 
 # Uncomment to debug local changes.

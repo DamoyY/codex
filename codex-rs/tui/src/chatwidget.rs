@@ -4365,16 +4365,16 @@ impl ChatWidget {
 
     #[cfg(target_os = "windows")]
     pub(crate) fn open_windows_sandbox_enable_prompt(&mut self, preset: ApprovalPreset) {
-        use ratatui_macros::line;
-
         if !codex_core::windows_sandbox::ELEVATED_SANDBOX_NUX_ENABLED {
             // Legacy flow (pre-NUX): explain the experimental sandbox and let the user enable it
             // directly (no elevation prompts).
             let mut header = ColumnRenderable::new();
             header.push(*Box::new(
                 Paragraph::new(vec![
-                    line!["Agent mode on Windows uses an experimental sandbox to limit network and filesystem access.".bold()],
-                    line!["Learn more: https://developers.openai.com/codex/windows"],
+                    Line::from(
+                        "Agent mode on Windows uses an experimental sandbox to limit network and filesystem access.".bold(),
+                    ),
+                    Line::from("Learn more: https://developers.openai.com/codex/windows"),
                 ])
                 .wrap(Wrap { trim: false }),
             ));
@@ -4429,10 +4429,10 @@ impl ChatWidget {
         let mut header = ColumnRenderable::new();
         header.push(*Box::new(
             Paragraph::new(vec![
-                line!["Set Up Agent Sandbox".bold()],
-                line![""],
-                line!["Agent mode uses an experimental Windows sandbox that protects your files and prevents network access by default."],
-                line!["Learn more: https://developers.openai.com/codex/windows"],
+                Line::from("Set Up Agent Sandbox".bold()),
+                Line::from(""),
+                Line::from("Agent mode uses an experimental Windows sandbox that protects your files and prevents network access by default."),
+                Line::from("Learn more: https://developers.openai.com/codex/windows"),
             ])
             .wrap(Wrap { trim: false }),
         ));
@@ -4504,8 +4504,6 @@ impl ChatWidget {
         preset: ApprovalPreset,
         reason: WindowsSandboxFallbackReason,
     ) {
-        use ratatui_macros::line;
-
         let _ = reason;
 
         let current_approval = self.config.approval_policy.value();
@@ -4518,14 +4516,14 @@ impl ChatWidget {
                 Self::preset_matches_current(current_approval, current_sandbox, preset)
             });
         let mut lines = Vec::new();
-        lines.push(line!["Use Non-Elevated Sandbox?".bold()]);
-        lines.push(line![""]);
-        lines.push(line![
-            "Elevation failed. You can also use a non-elevated sandbox, which protects your files and prevents network access under most circumstances. However, it carries greater risk if prompt injected."
-        ]);
-        lines.push(line![
-            "Learn more: https://developers.openai.com/codex/windows"
-        ]);
+        lines.push(Line::from("Use Non-Elevated Sandbox?".bold()));
+        lines.push(Line::from(""));
+        lines.push(Line::from(
+            "Elevation failed. You can also use a non-elevated sandbox, which protects your files and prevents network access under most circumstances. However, it carries greater risk if prompt injected.",
+        ));
+        lines.push(Line::from(
+            "Learn more: https://developers.openai.com/codex/windows",
+        ));
 
         let mut header = ColumnRenderable::new();
         header.push(*Box::new(Paragraph::new(lines).wrap(Wrap { trim: false })));
