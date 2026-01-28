@@ -347,10 +347,10 @@ impl HistoryCell for StatusHistoryCell {
     fn display_lines(&self, width: u16) -> Vec<Line<'static>> {
         let mut lines: Vec<Line<'static>> = Vec::new();
         lines.push(Line::from(vec![
-            Span::from(format!("{}>_ ", FieldFormatter::INDENT)).dim(),
-            Span::from("OpenAI Codex").bold(),
+            Span::from(format!("{}🌈 ", FieldFormatter::INDENT)).dim(),
+            Span::from("循此苦旅").bold(),
             Span::from(" ").dim(),
-            Span::from(format!("(v{CODEX_CLI_VERSION})")).dim(),
+            Span::from(format!("終抵繁星")).dim(),
         ]));
         lines.push(Line::from(Vec::<Span<'static>>::new()));
 

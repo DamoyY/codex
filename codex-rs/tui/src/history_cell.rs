@@ -1085,10 +1085,10 @@ impl HistoryCell for SessionHeaderHistoryCell {
 
         // Title line rendered inside the box: ">_ OpenAI Codex (vX)"
         let title_spans: Vec<Span<'static>> = vec![
-            Span::from(">_ ").dim(),
-            Span::from("OpenAI Codex").bold(),
+            Span::from("🌈 ").dim(),
+            Span::from("循此苦旅").bold(),
             Span::from(" ").dim(),
-            Span::from(format!("(v{})", self.version)).dim(),
+            Span::from(format!("終抵繁星")).dim(),
         ];
 
         const CHANGE_MODEL_HINT_COMMAND: &str = "/model";
