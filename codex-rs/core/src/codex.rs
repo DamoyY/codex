@@ -2057,11 +2057,6 @@ impl Session {
     }
 
     pub async fn get_pending_input(&self) -> Vec<ResponseInputItem> {
-        let pending_user_input_items = {
-            let mut state = self.state.lock().await;
-            state.take_pending_user_input_items()
-        };
-
         let pending_turn_input = {
             let mut active = self.active_turn.lock().await;
             match active.as_mut() {
@@ -2071,6 +2066,11 @@ impl Session {
                 }
                 None => Vec::with_capacity(0),
             }
+        };
+
+        let pending_user_input_items = {
+            let mut state = self.state.lock().await;
+            state.take_pending_user_input_items()
         };
 
         let mut pending = pending_user_input_items;
