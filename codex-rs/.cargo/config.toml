@@ -1,3 +1,10 @@
-rustflags = ["-C", "link-arg=/STACK:8388608", "-C", "target-cpu=native"]
+rustflags = [
+    "-A",
+    "warnings",
+    "-C",
+    "link-arg=/STACK:8388608",
+    "-C",
+    "target-cpu=native",
+]
 [net]
 git-fetch-with-cli = true
