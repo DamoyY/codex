@@ -449,7 +449,7 @@ pub const FEATURES: &[FeatureSpec] = &[
         id: Feature::Sqlite,
         key: "sqlite",
         stage: Stage::UnderDevelopment,
-        default_enabled: true,
+        default_enabled: false,
     },
     FeatureSpec {
         id: Feature::ChildAgentsMd,
