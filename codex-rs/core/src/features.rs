@@ -398,7 +398,7 @@ pub const FEATURES: &[FeatureSpec] = &[
         id: Feature::GhostCommit,
         key: "undo",
         stage: Stage::Stable,
-        default_enabled: false,
+        default_enabled: true,
     },
     FeatureSpec {
         id: Feature::ShellTool,
@@ -427,7 +427,7 @@ pub const FEATURES: &[FeatureSpec] = &[
             menu_description: "Run long-running terminal commands in the background.",
             announcement: "NEW! Try Background terminals for long-running commands. Enable in /experimental!",
         },
-        default_enabled: false,
+        default_enabled: true,
     },
     FeatureSpec {
         id: Feature::ShellSnapshot,
@@ -437,31 +437,31 @@ pub const FEATURES: &[FeatureSpec] = &[
             menu_description: "Snapshot your shell environment to avoid re-running login scripts for every command.",
             announcement: "NEW! Try shell snapshotting to make your Codex faster. Enable in /experimental!",
         },
-        default_enabled: false,
+        default_enabled: true,
     },
     FeatureSpec {
         id: Feature::RuntimeMetrics,
         key: "runtime_metrics",
         stage: Stage::UnderDevelopment,
-        default_enabled: false,
+        default_enabled: true,
     },
     FeatureSpec {
         id: Feature::Sqlite,
         key: "sqlite",
         stage: Stage::UnderDevelopment,
-        default_enabled: false,
+        default_enabled: true,
     },
     FeatureSpec {
         id: Feature::ChildAgentsMd,
         key: "child_agents_md",
         stage: Stage::UnderDevelopment,
-        default_enabled: false,
+        default_enabled: true,
     },
     FeatureSpec {
         id: Feature::ApplyPatchFreeform,
         key: "apply_patch_freeform",
         stage: Stage::UnderDevelopment,
-        default_enabled: false,
+        default_enabled: true,
     },
     FeatureSpec {
         id: Feature::ExecPolicy,
@@ -479,13 +479,13 @@ pub const FEATURES: &[FeatureSpec] = &[
         id: Feature::WindowsSandbox,
         key: "experimental_windows_sandbox",
         stage: Stage::UnderDevelopment,
-        default_enabled: false,
+        default_enabled: true,
     },
     FeatureSpec {
         id: Feature::WindowsSandboxElevated,
         key: "elevated_windows_sandbox",
         stage: Stage::UnderDevelopment,
-        default_enabled: false,
+        default_enabled: true,
     },
     FeatureSpec {
         id: Feature::RemoteCompaction,
@@ -509,7 +509,7 @@ pub const FEATURES: &[FeatureSpec] = &[
         #[cfg(not(windows))]
         stage: Stage::UnderDevelopment,
         #[cfg(not(windows))]
-        default_enabled: false,
+        default_enabled: true,
     },
     FeatureSpec {
         id: Feature::EnableRequestCompression,
@@ -521,7 +521,7 @@ pub const FEATURES: &[FeatureSpec] = &[
         id: Feature::Collab,
         key: "collab",
         stage: Stage::UnderDevelopment,
-        default_enabled: false,
+        default_enabled: true,
     },
     FeatureSpec {
         id: Feature::Apps,
@@ -531,7 +531,7 @@ pub const FEATURES: &[FeatureSpec] = &[
             menu_description: "Use a connected ChatGPT App using \"$\". Install Apps via /apps command. Restart Codex after enabling.",
             announcement: "NEW: Use ChatGPT Apps (Connectors) in Codex via $ mentions. Enable in /experimental and restart Codex!",
         },
-        default_enabled: false,
+        default_enabled: true,
     },
     FeatureSpec {
         id: Feature::SkillMcpDependencyInstall,
@@ -543,7 +543,7 @@ pub const FEATURES: &[FeatureSpec] = &[
         id: Feature::SkillEnvVarDependencyPrompt,
         key: "skill_env_var_dependency_prompt",
         stage: Stage::UnderDevelopment,
-        default_enabled: false,
+        default_enabled: true,
     },
     FeatureSpec {
         id: Feature::Steer,
@@ -553,13 +553,13 @@ pub const FEATURES: &[FeatureSpec] = &[
             menu_description: "Enter submits immediately; Tab queues messages when a task is running.",
             announcement: "NEW! Try Steer mode: Enter submits immediately, Tab queues. Enable in /experimental!",
         },
-        default_enabled: false,
+        default_enabled: true,
     },
     FeatureSpec {
         id: Feature::CollaborationModes,
         key: "collaboration_modes",
         stage: Stage::UnderDevelopment,
-        default_enabled: false,
+        default_enabled: true,
     },
     FeatureSpec {
         id: Feature::Personality,
@@ -569,13 +569,13 @@ pub const FEATURES: &[FeatureSpec] = &[
             menu_description: "Choose a communication style for Codex.",
             announcement: "NEW: Pick a personality for Codex. Enable in /experimental!",
         },
-        default_enabled: false,
+        default_enabled: true,
     },
     FeatureSpec {
         id: Feature::ResponsesWebsockets,
         key: "responses_websockets",
         stage: Stage::UnderDevelopment,
-        default_enabled: false,
+        default_enabled: true,
     },
 ];
 

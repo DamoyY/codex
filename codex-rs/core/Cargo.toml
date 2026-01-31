@@ -18,7 +18,7 @@ workspace = true
 
 [dependencies]
 anyhow = { workspace = true }
-arc-swap = "1.8.0"
+arc-swap = "*"
 async-channel = { workspace = true }
 async-trait = { workspace = true }
 base64 = { workspace = true }
@@ -73,7 +73,7 @@ sha2 = { workspace = true }
 shlex = { workspace = true }
 similar = { workspace = true }
 tempfile = { workspace = true }
-test-case = "3.3.1"
+test-case = "*"
 test-log = { workspace = true }
 thiserror = { workspace = true }
 time = { workspace = true, features = [
@@ -111,7 +111,7 @@ landlock = { workspace = true }
 seccompiler = { workspace = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
-core-foundation = "0.9"
+core-foundation = "*"
 keyring = { workspace = true, features = ["apple-native"] }
 
 # Build OpenSSL from source for musl builds.
