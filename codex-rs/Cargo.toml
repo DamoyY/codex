@@ -72,10 +72,10 @@ codex-apply-patch = { path = "apply-patch" }
 codex-arg0 = { path = "arg0" }
 codex-async-utils = { path = "async-utils" }
 codex-backend-client = { path = "backend-client" }
-codex-cloud-requirements = { path = "cloud-requirements" }
 codex-chatgpt = { path = "chatgpt" }
 codex-cli = { path = "cli" }
 codex-client = { path = "codex-client" }
+codex-cloud-requirements = { path = "cloud-requirements" }
 codex-common = { path = "common" }
 codex-core = { path = "core" }
 codex-exec = { path = "exec" }
@@ -100,9 +100,9 @@ codex-tui = { path = "tui" }
 codex-utils-absolute-path = { path = "utils/absolute-path" }
 codex-utils-cache = { path = "utils/cache" }
 codex-utils-cargo-bin = { path = "utils/cargo-bin" }
+codex-utils-home-dir = { path = "utils/home-dir" }
 codex-utils-image = { path = "utils/image" }
 codex-utils-json-to-toml = { path = "utils/json-to-toml" }
-codex-utils-home-dir = { path = "utils/home-dir" }
 codex-utils-pty = { path = "utils/pty" }
 codex-utils-readiness = { path = "utils/readiness" }
 codex-utils-string = { path = "utils/string" }
@@ -130,8 +130,8 @@ chrono = "*"
 clap = "*"
 clap_complete = "*"
 color-eyre = "*"
-crossterm = "0.28.1"
 crossbeam-channel = "*"
+crossterm = "0.28.1"
 ctor = "*"
 derive_more = "*"
 diffy = "*"
@@ -149,10 +149,10 @@ icu_decimal = "*"
 icu_locale_core = "*"
 icu_provider = { version = "*", features = ["sync"] }
 ignore = "*"
-indoc = "2.0"
 image = { version = "*", default-features = false }
 include_dir = "*"
 indexmap = "*"
+indoc = "*"
 insta = "*"
 itertools = "*"
 keyring = { version = "*", default-features = false }
@@ -165,7 +165,7 @@ maplit = "*"
 mime_guess = "*"
 multimap = "*"
 notify = "*"
-nucleo = { git = "https://github.com/helix-editor/nucleo.git", rev = "4253de9faabb4e5c6d81d946a5e35a90f87347ee" }
+nucleo = { git = "https://github.com/helix-editor/nucleo.git" }
 once_cell = "*"
 openssl-sys = "*"
 opentelemetry = "*"
@@ -204,7 +204,16 @@ sha2 = "*"
 shlex = "*"
 similar = "*"
 socket2 = "*"
-sqlx = { version = "0.8.6", default-features = false, features = ["chrono", "json", "macros", "migrate", "runtime-tokio-rustls", "sqlite", "time", "uuid"] }
+sqlx = { version = "*", default-features = false, features = [
+    "chrono",
+    "json",
+    "macros",
+    "migrate",
+    "runtime-tokio-rustls",
+    "sqlite",
+    "time",
+    "uuid",
+] }
 starlark = "*"
 strum = "*"
 strum_macros = "*"
@@ -228,6 +237,7 @@ toml = "*"
 toml_edit = "*"
 tracing = "*"
 tracing-appender = "*"
+tracing-opentelemetry = "*"
 tracing-subscriber = "*"
 tracing-test = "*"
 tree-sitter = "*"
