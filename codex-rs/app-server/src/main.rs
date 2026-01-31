@@ -9,6 +9,8 @@ use std::path::PathBuf;
 const MANAGED_CONFIG_PATH_ENV_VAR: &str = "CODEX_APP_SERVER_MANAGED_CONFIG_PATH";
 
 fn main() -> anyhow::Result<()> {
+    rustls::crypto::ring::default_provider()
+        .install_default();
     arg0_dispatch_or_else(|codex_linux_sandbox_exe| async move {
         let managed_config_path = managed_config_path_from_debug_env();
         let loader_overrides = LoaderOverrides {

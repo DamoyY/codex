@@ -49,6 +49,7 @@ tokio = { workspace = true, features = [
 tracing = { workspace = true, features = ["log"] }
 tracing-subscriber = { workspace = true, features = ["env-filter", "fmt"] }
 uuid = { workspace = true, features = ["serde", "v7"] }
+rustls = { version = "*", features = ["ring"] }
 
 [dev-dependencies]
 app_test_support = { workspace = true }
