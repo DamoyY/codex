@@ -89,16 +89,17 @@ pub fn generate_ts_with_options(
     options: GenerateTsOptions,
 ) -> Result<()> {
     let v2_out_dir = out_dir.join("v2");
+    let cfg = ::ts_rs::Config::new().with_out_dir(out_dir);
     ensure_dir(out_dir)?;
     ensure_dir(&v2_out_dir)?;
 
-    ClientRequest::export_all_to(out_dir)?;
+    ClientRequest::export_all(&cfg)?;
     export_client_responses(out_dir)?;
-    ClientNotification::export_all_to(out_dir)?;
+    ClientNotification::export_all(&cfg)?;
 
-    ServerRequest::export_all_to(out_dir)?;
+    ServerRequest::export_all(&cfg)?;
     export_server_responses(out_dir)?;
-    ServerNotification::export_all_to(out_dir)?;
+    ServerNotification::export_all(&cfg)?;
 
     if options.generate_indices {
         generate_index_ts(out_dir)?;
