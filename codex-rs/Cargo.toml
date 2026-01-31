@@ -11,6 +11,7 @@ members = [
     "arg0",
     "feedback",
     "codex-backend-openapi-models",
+    "cloud-requirements",
     "cloud-tasks",
     "cloud-tasks-client",
     "cli",
@@ -41,11 +42,13 @@ members = [
     "utils/cache",
     "utils/image",
     "utils/json-to-toml",
+    "utils/home-dir",
     "utils/pty",
     "utils/readiness",
     "utils/string",
     "codex-client",
     "codex-api",
+    "state",
 ]
 resolver = "2"
 
@@ -69,6 +72,7 @@ codex-apply-patch = { path = "apply-patch" }
 codex-arg0 = { path = "arg0" }
 codex-async-utils = { path = "async-utils" }
 codex-backend-client = { path = "backend-client" }
+codex-cloud-requirements = { path = "cloud-requirements" }
 codex-chatgpt = { path = "chatgpt" }
 codex-cli = { path = "cli" }
 codex-client = { path = "codex-client" }
@@ -90,6 +94,7 @@ codex-process-hardening = { path = "process-hardening" }
 codex-protocol = { path = "protocol" }
 codex-responses-api-proxy = { path = "responses-api-proxy" }
 codex-rmcp-client = { path = "rmcp-client" }
+codex-state = { path = "state" }
 codex-stdio-to-uds = { path = "stdio-to-uds" }
 codex-tui = { path = "tui" }
 codex-utils-absolute-path = { path = "utils/absolute-path" }
@@ -97,6 +102,7 @@ codex-utils-cache = { path = "utils/cache" }
 codex-utils-cargo-bin = { path = "utils/cargo-bin" }
 codex-utils-image = { path = "utils/image" }
 codex-utils-json-to-toml = { path = "utils/json-to-toml" }
+codex-utils-home-dir = { path = "utils/home-dir" }
 codex-utils-pty = { path = "utils/pty" }
 codex-utils-readiness = { path = "utils/readiness" }
 codex-utils-string = { path = "utils/string" }
@@ -125,6 +131,7 @@ clap = "*"
 clap_complete = "*"
 color-eyre = "*"
 crossterm = "0.28.1"
+crossbeam-channel = "*"
 ctor = "*"
 derive_more = "*"
 diffy = "*"
@@ -142,10 +149,10 @@ icu_decimal = "*"
 icu_locale_core = "*"
 icu_provider = { version = "*", features = ["sync"] }
 ignore = "*"
+indoc = "2.0"
 image = { version = "*", default-features = false }
 include_dir = "*"
 indexmap = "*"
-indoc = "*"
 insta = "*"
 itertools = "*"
 keyring = { version = "*", default-features = false }
@@ -158,7 +165,7 @@ maplit = "*"
 mime_guess = "*"
 multimap = "*"
 notify = "*"
-nucleo-matcher = "*"
+nucleo = { git = "https://github.com/helix-editor/nucleo.git", rev = "4253de9faabb4e5c6d81d946a5e35a90f87347ee" }
 once_cell = "*"
 openssl-sys = "*"
 opentelemetry = "*"
@@ -181,6 +188,7 @@ regex = "*"
 regex-lite = "*"
 reqwest = "*"
 rmcp = { version = "*", default-features = false }
+runfiles = { git = "https://github.com/dzbarsky/rules_rust", rev = "b56cbaa8465e74127f1ea216f813cd377295ad81" }
 schemars = "0.8"
 seccompiler = "*"
 semver = "*"
@@ -196,6 +204,7 @@ sha2 = "*"
 shlex = "*"
 similar = "*"
 socket2 = "*"
+sqlx = { version = "0.8.6", default-features = false, features = ["chrono", "json", "macros", "migrate", "runtime-tokio-rustls", "sqlite", "time", "uuid"] }
 starlark = "*"
 strum = "*"
 strum_macros = "*"
@@ -219,7 +228,6 @@ toml = "*"
 toml_edit = "*"
 tracing = "*"
 tracing-appender = "*"
-tracing-opentelemetry = "*"
 tracing-subscriber = "*"
 tracing-test = "*"
 tree-sitter = "*"
