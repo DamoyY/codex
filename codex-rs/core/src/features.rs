@@ -558,17 +558,13 @@ pub const FEATURES: &[FeatureSpec] = &[
     FeatureSpec {
         id: Feature::CollaborationModes,
         key: "collaboration_modes",
-        stage: Stage::UnderDevelopment,
+        stage: Stage::Stable,
         default_enabled: true,
     },
     FeatureSpec {
         id: Feature::Personality,
         key: "personality",
-        stage: Stage::Experimental {
-            name: "Personality",
-            menu_description: "Choose a communication style for Codex.",
-            announcement: "NEW: Pick a personality for Codex. Enable in /experimental!",
-        },
+        stage: Stage::Stable,
         default_enabled: true,
     },
     FeatureSpec {
