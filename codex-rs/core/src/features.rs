@@ -485,7 +485,7 @@ pub const FEATURES: &[FeatureSpec] = &[
         id: Feature::WindowsSandboxElevated,
         key: "elevated_windows_sandbox",
         stage: Stage::UnderDevelopment,
-        default_enabled: true,
+        default_enabled: false,
     },
     FeatureSpec {
         id: Feature::RemoteCompaction,
