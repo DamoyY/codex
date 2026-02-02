@@ -49,6 +49,7 @@ members = [
     "codex-client",
     "codex-api",
     "state",
+    "codex-experimental-api-macros",
 ]
 resolver = "2"
 
@@ -80,6 +81,7 @@ codex-common = { path = "common" }
 codex-core = { path = "core" }
 codex-exec = { path = "exec" }
 codex-execpolicy = { path = "execpolicy" }
+codex-experimental-api-macros = { path = "codex-experimental-api-macros" }
 codex-feedback = { path = "feedback" }
 codex-file-search = { path = "file-search" }
 codex-git = { path = "utils/git" }
@@ -154,6 +156,7 @@ include_dir = "*"
 indexmap = "*"
 indoc = "*"
 insta = "*"
+inventory = "*"
 itertools = "*"
 keyring = { version = "*", default-features = false }
 landlock = "*"
@@ -255,10 +258,9 @@ walkdir = "*"
 webbrowser = "*"
 which = "*"
 wildmatch = "*"
-zstd = "*"
-
 wiremock = "*"
 zeroize = "*"
+zstd = "*"
 
 [workspace.lints]
 
