@@ -195,7 +195,6 @@ rmcp = { version = "0.12", default-features = false }
 runfiles = { git = "https://github.com/dzbarsky/rules_rust", rev = "b56cbaa8465e74127f1ea216f813cd377295ad81" }
 schemars = "0.8"
 seccompiler = "*"
-semver = "*"
 sentry = "*"
 serde = "*"
 serde_json = "*"
@@ -208,16 +207,7 @@ sha2 = "*"
 shlex = "*"
 similar = "*"
 socket2 = "*"
-sqlx = { version = "*", default-features = false, features = [
-    "chrono",
-    "json",
-    "macros",
-    "migrate",
-    "runtime-tokio-rustls",
-    "sqlite",
-    "time",
-    "uuid",
-] }
+sqlx = { version = "*", default-features = false, features = ["chrono", "json", "macros", "migrate", "runtime-tokio-rustls", "sqlite", "time", "uuid"] }
 starlark = "*"
 strum = "*"
 strum_macros = "*"
@@ -232,20 +222,17 @@ tiny_http = "*"
 tokio = "*"
 tokio-stream = "*"
 tokio-test = "*"
-tokio-tungstenite = { version = "0.28.0", features = [
-    "proxy",
-    "rustls-tls-native-roots",
-] }
+tokio-tungstenite = { version = "0.28.0", features = ["proxy", "rustls-tls-native-roots"] }
 tokio-util = "*"
 toml = "*"
 toml_edit = "*"
 tracing = "*"
 tracing-appender = "*"
-tracing-opentelemetry = "*"
 tracing-subscriber = "*"
 tracing-test = "*"
 tree-sitter = "*"
 tree-sitter-bash = "*"
+zstd = "*"
 tree-sitter-highlight = "*"
 ts-rs = "*"
 uds_windows = "*"
@@ -259,9 +246,9 @@ walkdir = "*"
 webbrowser = "*"
 which = "*"
 wildmatch = "*"
+zip = "*"
 wiremock = "*"
 zeroize = "*"
-zstd = "*"
 
 [workspace.lints]
 
