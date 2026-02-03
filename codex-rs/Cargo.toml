@@ -17,6 +17,7 @@ members = [
     "cli",
     "common",
     "core",
+    "secrets",
     "exec",
     "exec-server",
     "execpolicy",
@@ -26,7 +27,6 @@ members = [
     "lmstudio",
     "login",
     "mcp-server",
-    "mcp-types",
     "network-proxy",
     "ollama",
     "process-hardening",
@@ -79,6 +79,7 @@ codex-client = { path = "codex-client" }
 codex-cloud-requirements = { path = "cloud-requirements" }
 codex-common = { path = "common" }
 codex-core = { path = "core" }
+codex-secrets = { path = "secrets" }
 codex-exec = { path = "exec" }
 codex-execpolicy = { path = "execpolicy" }
 codex-experimental-api-macros = { path = "codex-experimental-api-macros" }
@@ -111,10 +112,10 @@ codex-utils-string = { path = "utils/string" }
 codex-windows-sandbox = { path = "windows-sandbox-rs" }
 core_test_support = { path = "core/tests/common" }
 exec_server_test_support = { path = "exec-server/tests/common" }
-mcp-types = { path = "mcp-types" }
 mcp_test_support = { path = "mcp-server/tests/common" }
 
 # External
+age = "*"
 allocative = "*"
 ansi-to-tui = "7"
 anyhow = "*"
@@ -132,8 +133,8 @@ chrono = "*"
 clap = "*"
 clap_complete = "*"
 color-eyre = "*"
-crossbeam-channel = "*"
 crossterm = "0.28.1"
+crossbeam-channel = "*"
 ctor = "*"
 derive_more = "*"
 diffy = "*"
@@ -269,7 +270,7 @@ zstd = "*"
 # cargo-shear cannot see the platform-specific openssl-sys usage, so we
 # silence the false positive here instead of deleting a real dependency.
 [workspace.metadata.cargo-shear]
-ignored = ["icu_provider", "openssl-sys", "codex-utils-readiness"]
+ignored = ["icu_provider", "openssl-sys", "codex-utils-readiness", "codex-secrets"]
 
 [profile.ci-test]
 debug = 1         # Reduce debug symbol size
