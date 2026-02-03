@@ -191,7 +191,7 @@ ratatui-macros = "*"
 regex = "*"
 regex-lite = "*"
 reqwest = "*"
-rmcp = { version = "*", default-features = false }
+rmcp = { version = "0.12", default-features = false }
 runfiles = { git = "https://github.com/dzbarsky/rules_rust", rev = "b56cbaa8465e74127f1ea216f813cd377295ad81" }
 schemars = "0.8"
 seccompiler = "*"
