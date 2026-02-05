@@ -489,7 +489,7 @@ pub const FEATURES: &[FeatureSpec] = &[
         id: Feature::WindowsSandboxElevated,
         key: "elevated_windows_sandbox",
         stage: Stage::UnderDevelopment,
-        default_enabled: false,
+        default_enabled: true,
     },
     FeatureSpec {
         id: Feature::RemoteCompaction,
@@ -575,7 +575,7 @@ pub const FEATURES: &[FeatureSpec] = &[
         id: Feature::ResponsesWebsockets,
         key: "responses_websockets",
         stage: Stage::UnderDevelopment,
-        default_enabled: false,
+        default_enabled: true,
     },
 ];
 
