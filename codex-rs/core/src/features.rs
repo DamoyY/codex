@@ -97,8 +97,6 @@ pub enum Feature {
     WindowsSandbox,
     /// Use the elevated Windows sandbox pipeline (setup + runner).
     WindowsSandboxElevated,
-    /// Remote compaction enabled (only for ChatGPT auth)
-    RemoteCompaction,
     /// Refresh remote models and emit AppReady once the list is available.
     RemoteModels,
     /// Experimental shell snapshotting.
@@ -496,12 +494,6 @@ pub const FEATURES: &[FeatureSpec] = &[
     FeatureSpec {
         id: Feature::WindowsSandboxElevated,
         key: "elevated_windows_sandbox",
-        stage: Stage::UnderDevelopment,
-        default_enabled: true,
-    },
-    FeatureSpec {
-        id: Feature::RemoteCompaction,
-        key: "remote_compaction",
         stage: Stage::UnderDevelopment,
         default_enabled: true,
     },
