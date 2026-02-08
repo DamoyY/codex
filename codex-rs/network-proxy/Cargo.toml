@@ -30,13 +30,13 @@ tokio = { workspace = true, features = ["full"] }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["fmt"] }
 url = { workspace = true }
-rama-core = { version = "*" }
-rama-http = { version = "*" }
-rama-http-backend = { version = "*", features = ["tls"] }
-rama-net = { version = "*", features = ["http", "tls"] }
-rama-socks5 = { version = "*" }
-rama-tcp = { version = "*", features = ["http"] }
-rama-tls-rustls = { version = "*", features = ["http"] }
+rama-core = { version = "=0.3.0-alpha.4" }
+rama-http = { version = "=0.3.0-alpha.4" }
+rama-http-backend = { version = "=0.3.0-alpha.4", features = ["tls"] }
+rama-net = { version = "=0.3.0-alpha.4", features = ["http", "tls"] }
+rama-socks5 = { version = "=0.3.0-alpha.4" }
+rama-tcp = { version = "=0.3.0-alpha.4", features = ["http"] }
+rama-tls-rustls = { version = "=0.3.0-alpha.4", features = ["http"] }
 
 [dev-dependencies]
 pretty_assertions = { workspace = true }
