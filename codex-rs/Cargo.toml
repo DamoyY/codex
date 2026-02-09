@@ -28,6 +28,7 @@ members = [
     "login",
     "mcp-server",
     "network-proxy",
+    "network-proxy-cli",
     "ollama",
     "process-hardening",
     "protocol",
@@ -80,7 +81,6 @@ codex-client = { path = "codex-client" }
 codex-cloud-requirements = { path = "cloud-requirements" }
 codex-common = { path = "common" }
 codex-core = { path = "core" }
-codex-secrets = { path = "secrets" }
 codex-exec = { path = "exec" }
 codex-execpolicy = { path = "execpolicy" }
 codex-experimental-api-macros = { path = "codex-experimental-api-macros" }
@@ -98,6 +98,7 @@ codex-process-hardening = { path = "process-hardening" }
 codex-protocol = { path = "protocol" }
 codex-responses-api-proxy = { path = "responses-api-proxy" }
 codex-rmcp-client = { path = "rmcp-client" }
+codex-secrets = { path = "secrets" }
 codex-state = { path = "state" }
 codex-stdio-to-uds = { path = "stdio-to-uds" }
 codex-tui = { path = "tui" }
@@ -136,8 +137,8 @@ chrono = "*"
 clap = "*"
 clap_complete = "*"
 color-eyre = "*"
-crossterm = "0.28.1"
 crossbeam-channel = "*"
+crossterm = "0.28.1"
 ctor = "*"
 derive_more = "*"
 diffy = "*"
@@ -194,11 +195,12 @@ ratatui-macros = "*"
 regex = "*"
 regex-lite = "*"
 reqwest = { version = "*", features = ["json", "rustls-tls"] }
-rmcp = { version = "0.12", default-features = false }
-rustls = { version = "*", default-features = false, features = ["ring", "std"] }
+rmcp = { version = "*", default-features = false }
 runfiles = { git = "https://github.com/dzbarsky/rules_rust", rev = "b56cbaa8465e74127f1ea216f813cd377295ad81" }
+rustls = { version = "*", default-features = false, features = ["ring", "std"] }
 schemars = "0.8"
 seccompiler = "*"
+semver = "*"
 sentry = "*"
 serde = "*"
 serde_json = "*"
@@ -208,11 +210,19 @@ serde_yaml = "*"
 serial_test = "*"
 sha1 = "*"
 sha2 = "*"
-semver = "*"
 shlex = "*"
 similar = "*"
 socket2 = "*"
-sqlx = { version = "*", default-features = false, features = ["chrono", "json", "macros", "migrate", "runtime-tokio-rustls", "sqlite", "time", "uuid"] }
+sqlx = { version = "*", default-features = false, features = [
+    "chrono",
+    "json",
+    "macros",
+    "migrate",
+    "runtime-tokio-rustls",
+    "sqlite",
+    "time",
+    "uuid",
+] }
 starlark = "*"
 strum = "*"
 strum_macros = "*"
@@ -227,8 +237,10 @@ tiny_http = "*"
 tokio = "*"
 tokio-stream = "*"
 tokio-test = "*"
-tokio-tungstenite = { version = "0.28.0", features = ["proxy", "rustls-tls-native-roots"] }
-tungstenite = { version = "0.27.0", features = ["deflate", "proxy"] }
+tokio-tungstenite = { version = "0.28.0", features = [
+    "proxy",
+    "rustls-tls-native-roots",
+] }
 tokio-util = "*"
 toml = "*"
 toml_edit = "*"
@@ -238,9 +250,9 @@ tracing-subscriber = "*"
 tracing-test = "*"
 tree-sitter = "*"
 tree-sitter-bash = "*"
-zstd = "*"
 tree-sitter-highlight = "*"
 ts-rs = "*"
+tungstenite = { version = "0.27.0", features = ["deflate", "proxy"] }
 uds_windows = "*"
 unicode-segmentation = "*"
 unicode-width = "*"
@@ -252,9 +264,10 @@ walkdir = "*"
 webbrowser = "*"
 which = "*"
 wildmatch = "*"
-zip = "6"
 wiremock = "*"
 zeroize = "*"
+zip = "6"
+zstd = "*"
 
 [workspace.lints]
 
@@ -263,7 +276,12 @@ zeroize = "*"
 # cargo-shear cannot see the platform-specific openssl-sys usage, so we
 # silence the false positive here instead of deleting a real dependency.
 [workspace.metadata.cargo-shear]
-ignored = ["icu_provider", "openssl-sys", "codex-utils-readiness", "codex-secrets"]
+ignored = [
+    "icu_provider",
+    "openssl-sys",
+    "codex-utils-readiness",
+    "codex-secrets",
+]
 
 [profile.ci-test]
 debug = 1         # Reduce debug symbol size
