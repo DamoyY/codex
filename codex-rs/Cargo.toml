@@ -157,11 +157,11 @@ icu_decimal = "*"
 icu_locale_core = "*"
 icu_provider = { version = "*", features = ["sync"] }
 ignore = "*"
+indoc = "*"
+insta = "*"
 image = { version = "*", default-features = false }
 include_dir = "*"
 indexmap = "*"
-indoc = "*"
-insta = "*"
 inventory = "*"
 itertools = "*"
 keyring = { version = "*", default-features = false }
@@ -197,8 +197,8 @@ regex = "*"
 regex-lite = "*"
 reqwest = { version = "*", features = ["json", "rustls-tls"] }
 rmcp = { version = "*", default-features = false }
-runfiles = { git = "https://github.com/dzbarsky/rules_rust", rev = "b56cbaa8465e74127f1ea216f813cd377295ad81" }
 rustls = { version = "*", default-features = false, features = ["ring", "std"] }
+runfiles = { git = "https://github.com/dzbarsky/rules_rust", rev = "b56cbaa8465e74127f1ea216f813cd377295ad81" }
 schemars = "0.8"
 seccompiler = "*"
 semver = "*"
