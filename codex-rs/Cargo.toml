@@ -28,7 +28,6 @@ members = [
     "login",
     "mcp-server",
     "network-proxy",
-    "network-proxy-cli",
     "ollama",
     "process-hardening",
     "protocol",
@@ -117,9 +116,9 @@ core_test_support = { path = "core/tests/common" }
 exec_server_test_support = { path = "exec-server/tests/common" }
 mcp_test_support = { path = "mcp-server/tests/common" }
 
-# External
 tracing-opentelemetry = "*"
 
+# External
 age = "*"
 allocative = "*"
 ansi-to-tui = "7"
@@ -132,14 +131,15 @@ async-stream = "*"
 async-trait = "*"
 axum = { version = "*", default-features = false }
 base64 = "*"
+bm25 = "*"
 bytes = "*"
 chardetng = "*"
 chrono = "*"
 clap = "*"
 clap_complete = "*"
 color-eyre = "*"
-crossbeam-channel = "*"
 crossterm = "0.28.1"
+crossbeam-channel = "*"
 ctor = "*"
 derive_more = "*"
 diffy = "*"
