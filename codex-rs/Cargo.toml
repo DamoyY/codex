@@ -45,6 +45,7 @@ members = [
     "utils/home-dir",
     "utils/pty",
     "utils/readiness",
+    "utils/rustls-provider",
     "utils/string",
     "codex-client",
     "codex-api",
@@ -110,6 +111,7 @@ codex-utils-image = { path = "utils/image" }
 codex-utils-json-to-toml = { path = "utils/json-to-toml" }
 codex-utils-pty = { path = "utils/pty" }
 codex-utils-readiness = { path = "utils/readiness" }
+codex-utils-rustls-provider = { path = "utils/rustls-provider" }
 codex-utils-string = { path = "utils/string" }
 codex-windows-sandbox = { path = "windows-sandbox-rs" }
 core_test_support = { path = "core/tests/common" }
