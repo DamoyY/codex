@@ -2,6 +2,73 @@
   "models": [
     {
       "supports_reasoning_summaries": true,
+      "support_verbosity": true,
+      "default_verbosity": "low",
+      "apply_patch_tool_type": "freeform",
+      "input_modalities": [
+        "text",
+        "image"
+      ],
+      "truncation_policy": {
+        "mode": "tokens",
+        "limit": 10000
+      },
+      "supports_parallel_tool_calls": true,
+      "context_window": 272000,
+      "reasoning_summary_format": "experimental",
+      "slug": "gpt-5.3-codex",
+      "display_name": "gpt-5.3-codex",
+      "description": "Latest frontier agentic coding model.",
+      "default_reasoning_level": "medium",
+      "supported_reasoning_levels": [
+        {
+          "effort": "low",
+          "description": "Fast responses with lighter reasoning"
+        },
+        {
+          "effort": "medium",
+          "description": "Balances speed and reasoning depth for everyday tasks"
+        },
+        {
+          "effort": "high",
+          "description": "Greater reasoning depth for complex problems"
+        },
+        {
+          "effort": "xhigh",
+          "description": "Extra high reasoning depth for complex problems"
+        }
+      ],
+      "shell_type": "shell_command",
+      "visibility": "hide",
+      "minimal_client_version": "0.98.0",
+      "supported_in_api": true,
+      "upgrade": null,
+      "priority": 0,
+      "base_instructions": "",
+      "model_messages": {
+        "instructions_template": "",
+        "instructions_variables": {
+          "personality_default": "",
+          "personality_friendly": "",
+          "personality_pragmatic": ""
+        }
+      },
+      "experimental_supported_tools": [],
+      "available_in_plans": [
+        "business",
+        "edu",
+        "education",
+        "enterprise",
+        "finserv",
+        "go",
+        "hc",
+        "plus",
+        "pro",
+        "team"
+      ]
+    },
+    {
+      "supports_reasoning_summaries": true,
       "support_verbosity": false,
       "default_verbosity": null,
       "apply_patch_tool_type": "freeform",
@@ -42,8 +109,11 @@
       "visibility": "list",
       "minimal_client_version": "0.0.1",
       "supported_in_api": true,
-      "upgrade": null,
-      "priority": 0,
+      "upgrade": {
+        "model": "gpt-5.3-codex",
+        "migration_markdown": "**Codex just got an upgrade. Introducing {model_to}.**\n\nCodex is now powered by {model_to}, our most capable agentic coding model yet. It's built for long-running, project-scale work, with mid-turn steering + frequent progress updates so you can collaborate while it runs (and it's faster too).\n\nLearn more: https://openai.com/index/introducing-gpt-5-3-codex/\n\nYou can keep using {model_from} if you prefer.\n"
+      },
+      "priority": 1,
       "base_instructions": "",
       "model_messages": {
         "instructions_template": "",
@@ -70,8 +140,8 @@
     },
     {
       "supports_reasoning_summaries": true,
-      "support_verbosity": true,
-      "default_verbosity": "low",
+      "support_verbosity": false,
+      "default_verbosity": null,
       "apply_patch_tool_type": "freeform",
       "input_modalities": [
         "text",
@@ -84,9 +154,9 @@
       "supports_parallel_tool_calls": true,
       "context_window": 272000,
       "reasoning_summary_format": "experimental",
-      "slug": "gpt-5.3-codex",
-      "display_name": "gpt-5.3-codex",
-      "description": "Latest frontier agentic coding model.",
+      "slug": "gpt-5.2-codex",
+      "display_name": "gpt-5.2-codex",
+      "description": "Frontier agentic coding model.",
       "default_reasoning_level": "medium",
       "supported_reasoning_levels": [
         {
@@ -107,20 +177,16 @@
         }
       ],
       "shell_type": "shell_command",
-      "visibility": "hide",
-      "minimal_client_version": "0.98.0",
-      "supported_in_api": false,
-      "upgrade": null,
-      "priority": 1,
-      "base_instructions": "",
-      "model_messages": {
-        "instructions_template": "",
-        "instructions_variables": {
-          "personality_default": "",
-          "personality_friendly": "",
-          "personality_pragmatic": ""
-        }
+      "visibility": "list",
+      "minimal_client_version": "0.0.1",
+      "supported_in_api": true,
+      "upgrade": {
+        "model": "gpt-5.3-codex",
+        "migration_markdown": "**Codex just got an upgrade. Introducing {model_to}.**\n\nCodex is now powered by {model_to}, our most capable agentic coding model yet. It's built for long-running, project-scale work, with mid-turn steering + frequent progress updates so you can collaborate while it runs (and it's faster too).\n\nLearn more: https://openai.com/index/introducing-gpt-5-3-codex/\n\nYou can keep using {model_from} if you prefer.\n"
       },
+      "priority": 2,
+      "base_instructions": "",
+      "model_messages": null,
       "experimental_supported_tools": [],
       "available_in_plans": [
         "business",
@@ -128,6 +194,7 @@
         "education",
         "enterprise",
         "finserv",
+        "free",
         "go",
         "hc",
         "plus",
@@ -178,8 +245,8 @@
       "minimal_client_version": "0.0.1",
       "supported_in_api": true,
       "upgrade": {
-        "model": "gpt-5.2-codex",
-        "migration_markdown": "**Codex just got an upgrade. Introducing {model_to}.**\n\nCodex is now powered by {model_to}, our latest frontier agentic coding model. It is smarter and faster than its predecessors and capable of long-running project-scale work. Learn more about {model_to} at https://openai.com/index/introducing-gpt-5-2-codex\n\nYou can continue using {model_from} if you prefer.\n"
+        "model": "gpt-5.3-codex",
+        "migration_markdown": "**Codex just got an upgrade. Introducing {model_to}.**\n\nCodex is now powered by {model_to}, our most capable agentic coding model yet. It's built for long-running, project-scale work, with mid-turn steering + frequent progress updates so you can collaborate while it runs (and it's faster too).\n\nLearn more: https://openai.com/index/introducing-gpt-5-3-codex/\n\nYou can keep using {model_from} if you prefer.\n"
       },
       "priority": 2,
       "base_instructions": "",
@@ -224,8 +291,8 @@
       "minimal_client_version": "0.0.1",
       "supported_in_api": true,
       "upgrade": {
-        "model": "gpt-5.2-codex",
-        "migration_markdown": "**Codex just got an upgrade. Introducing {model_to}.**\n\nCodex is now powered by {model_to}, our latest frontier agentic coding model. It is smarter and faster than its predecessors and capable of long-running project-scale work. Learn more about {model_to} at https://openai.com/index/introducing-gpt-5-2-codex\n\nYou can continue using {model_from} if you prefer.\n"
+        "model": "gpt-5.3-codex",
+        "migration_markdown": "**Codex just got an upgrade. Introducing {model_to}.**\n\nCodex is now powered by {model_to}, our most capable agentic coding model yet. It's built for long-running, project-scale work, with mid-turn steering + frequent progress updates so you can collaborate while it runs (and it's faster too).\n\nLearn more: https://openai.com/index/introducing-gpt-5-3-codex/\n\nYou can keep using {model_from} if you prefer.\n"
       },
       "priority": 3,
       "base_instructions": "",
@@ -274,12 +341,26 @@
       "minimal_client_version": "0.0.1",
       "supported_in_api": true,
       "upgrade": {
-        "model": "gpt-5.2-codex",
-        "migration_markdown": "**Codex just got an upgrade. Introducing {model_to}.**\n\nCodex is now powered by {model_to}, our latest frontier agentic coding model. It is smarter and faster than its predecessors and capable of long-running project-scale work. Learn more about {model_to} at https://openai.com/index/introducing-gpt-5-2-codex\n\nYou can continue using {model_from} if you prefer.\n"
+        "model": "gpt-5.3-codex",
+        "migration_markdown": "**Codex just got an upgrade. Introducing {model_to}.**\n\nCodex is now powered by {model_to}, our most capable agentic coding model yet. It's built for long-running, project-scale work, with mid-turn steering + frequent progress updates so you can collaborate while it runs (and it's faster too).\n\nLearn more: https://openai.com/index/introducing-gpt-5-3-codex/\n\nYou can keep using {model_from} if you prefer.\n"
       },
-      "priority": 5,
+      "priority": 4,
       "base_instructions": "",
-      "experimental_supported_tools": []
+      "model_messages": null,
+      "experimental_supported_tools": [],
+      "available_in_plans": [
+        "business",
+        "edu",
+        "education",
+        "enterprise",
+        "finserv",
+        "free",
+        "go",
+        "hc",
+        "plus",
+        "pro",
+        "team"
+      ]
     },
     {
       "supports_reasoning_summaries": true,
@@ -320,8 +401,8 @@
       "minimal_client_version": "0.0.1",
       "supported_in_api": true,
       "upgrade": {
-        "model": "gpt-5.2-codex",
-        "migration_markdown": "**Codex just got an upgrade. Introducing {model_to}.**\n\nCodex is now powered by {model_to}, our latest frontier agentic coding model. It is smarter and faster than its predecessors and capable of long-running project-scale work. Learn more about {model_to} at https://openai.com/index/introducing-gpt-5-2-codex\n\nYou can continue using {model_from} if you prefer.\n"
+        "model": "gpt-5.3-codex",
+        "migration_markdown": "**Codex just got an upgrade. Introducing {model_to}.**\n\nCodex is now powered by {model_to}, our most capable agentic coding model yet. It's built for long-running, project-scale work, with mid-turn steering + frequent progress updates so you can collaborate while it runs (and it's faster too).\n\nLearn more: https://openai.com/index/introducing-gpt-5-3-codex/\n\nYou can keep using {model_from} if you prefer.\n"
       },
       "priority": 5,
       "base_instructions": "",
@@ -366,8 +447,8 @@
       "minimal_client_version": "0.0.1",
       "supported_in_api": true,
       "upgrade": {
-        "model": "gpt-5.2-codex",
-        "migration_markdown": "**Codex just got an upgrade. Introducing {model_to}.**\n\nCodex is now powered by {model_to}, our latest frontier agentic coding model. It is smarter and faster than its predecessors and capable of long-running project-scale work. Learn more about {model_to} at https://openai.com/index/introducing-gpt-5-2-codex\n\nYou can continue using {model_from} if you prefer.\n"
+        "model": "gpt-5.3-codex",
+        "migration_markdown": "**Codex just got an upgrade. Introducing {model_to}.**\n\nCodex is now powered by {model_to}, our most capable agentic coding model yet. It's built for long-running, project-scale work, with mid-turn steering + frequent progress updates so you can collaborate while it runs (and it's faster too).\n\nLearn more: https://openai.com/index/introducing-gpt-5-3-codex/\n\nYou can keep using {model_from} if you prefer.\n"
       },
       "priority": 8,
       "base_instructions": "",
@@ -416,12 +497,82 @@
       "minimal_client_version": "0.0.1",
       "supported_in_api": true,
       "upgrade": {
-        "model": "gpt-5.2-codex",
-        "migration_markdown": "**Codex just got an upgrade. Introducing {model_to}.**\n\nCodex is now powered by {model_to}, our latest frontier agentic coding model. It is smarter and faster than its predecessors and capable of long-running project-scale work. Learn more about {model_to} at https://openai.com/index/introducing-gpt-5-2-codex\n\nYou can continue using {model_from} if you prefer.\n"
+        "model": "gpt-5.3-codex",
+        "migration_markdown": "**Codex just got an upgrade. Introducing {model_to}.**\n\nCodex is now powered by {model_to}, our most capable agentic coding model yet. It's built for long-running, project-scale work, with mid-turn steering + frequent progress updates so you can collaborate while it runs (and it's faster too).\n\nLearn more: https://openai.com/index/introducing-gpt-5-3-codex/\n\nYou can keep using {model_from} if you prefer.\n"
       },
       "priority": 9,
       "base_instructions": "",
-      "experimental_supported_tools": []
+      "model_messages": null,
+      "experimental_supported_tools": [],
+      "available_in_plans": [
+        "business",
+        "edu",
+        "education",
+        "enterprise",
+        "finserv",
+        "free",
+        "go",
+        "hc",
+        "plus",
+        "pro",
+        "team"
+      ]
+    },
+    {
+      "supports_reasoning_summaries": true,
+      "support_verbosity": false,
+      "default_verbosity": null,
+      "apply_patch_tool_type": "freeform",
+      "input_modalities": [
+        "text",
+        "image"
+      ],
+      "truncation_policy": {
+        "mode": "tokens",
+        "limit": 10000
+      },
+      "supports_parallel_tool_calls": false,
+      "context_window": 272000,
+      "reasoning_summary_format": "experimental",
+      "slug": "gpt-5.1-codex-mini",
+      "display_name": "gpt-5.1-codex-mini",
+      "description": "Optimized for codex. Cheaper, faster, but less capable.",
+      "default_reasoning_level": "medium",
+      "supported_reasoning_levels": [
+        {
+          "effort": "medium",
+          "description": "Dynamically adjusts reasoning based on the task"
+        },
+        {
+          "effort": "high",
+          "description": "Maximizes reasoning depth for complex or ambiguous problems"
+        }
+      ],
+      "shell_type": "shell_command",
+      "visibility": "list",
+      "minimal_client_version": "0.0.1",
+      "supported_in_api": true,
+      "upgrade": {
+        "model": "gpt-5.3-codex",
+        "migration_markdown": "**Codex just got an upgrade. Introducing {model_to}.**\n\nCodex is now powered by {model_to}, our most capable agentic coding model yet. It's built for long-running, project-scale work, with mid-turn steering + frequent progress updates so you can collaborate while it runs (and it's faster too).\n\nLearn more: https://openai.com/index/introducing-gpt-5-3-codex/\n\nYou can keep using {model_from} if you prefer.\n"
+      },
+      "priority": 10,
+      "base_instructions": "",
+      "model_messages": null,
+      "experimental_supported_tools": [],
+      "available_in_plans": [
+        "business",
+        "edu",
+        "education",
+        "enterprise",
+        "finserv",
+        "free",
+        "go",
+        "hc",
+        "plus",
+        "pro",
+        "team"
+      ]
     },
     {
       "supports_reasoning_summaries": true,
@@ -458,13 +609,12 @@
       "minimal_client_version": "0.0.1",
       "supported_in_api": true,
       "upgrade": {
-        "model": "gpt-5.2-codex",
-        "migration_markdown": "**Codex just got an upgrade. Introducing {model_to}.**\n\nCodex is now powered by {model_to}, our latest frontier agentic coding model. It is smarter and faster than its predecessors and capable of long-running project-scale work. Learn more about {model_to} at https://openai.com/index/introducing-gpt-5-2-codex\n\nYou can continue using {model_from} if you prefer.\n"
+        "model": "gpt-5.3-codex",
+        "migration_markdown": "**Codex just got an upgrade. Introducing {model_to}.**\n\nCodex is now powered by {model_to}, our most capable agentic coding model yet. It's built for long-running, project-scale work, with mid-turn steering + frequent progress updates so you can collaborate while it runs (and it's faster too).\n\nLearn more: https://openai.com/index/introducing-gpt-5-3-codex/\n\nYou can keep using {model_from} if you prefer.\n"
       },
       "priority": 11,
       "base_instructions": "",
       "experimental_supported_tools": []
-      
     }
   ]
 }
