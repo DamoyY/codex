@@ -104,7 +104,6 @@ codex-process-hardening = { path = "process-hardening" }
 codex-protocol = { path = "protocol" }
 codex-responses-api-proxy = { path = "responses-api-proxy" }
 codex-rmcp-client = { path = "rmcp-client" }
-codex-secrets = { path = "secrets" }
 codex-state = { path = "state" }
 codex-stdio-to-uds = { path = "stdio-to-uds" }
 codex-tui = { path = "tui" }
@@ -204,7 +203,7 @@ ratatui-macros = "*"
 regex = "*"
 regex-lite = "*"
 reqwest = { version = "*", features = ["json", "rustls-tls"] }
-rmcp = { version = "*", default-features = false }
+rmcp = { version = "0.14", default-features = false }
 rustls = { version = "*", default-features = false, features = ["ring", "std"] }
 runfiles = { git = "https://github.com/dzbarsky/rules_rust", rev = "b56cbaa8465e74127f1ea216f813cd377295ad81" }
 schemars = "0.8"

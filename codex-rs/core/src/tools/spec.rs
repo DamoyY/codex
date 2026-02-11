@@ -210,12 +210,6 @@ fn create_exec_command_tool(include_prefix_rule: bool) -> ToolSpec {
             },
         ),
         (
-            "shell".to_string(),
-            JsonSchema::String {
-                description: Some("Shell binary to launch. Defaults to the user's default shell.".to_string()),
-            },
-        ),
-        (
             "login".to_string(),
             JsonSchema::Boolean {
                 description: Some(
@@ -255,12 +249,12 @@ fn create_exec_command_tool(include_prefix_rule: bool) -> ToolSpec {
     ToolSpec::Function(ResponsesApiTool {
         name: "exec_command".to_string(),
         description:
-            "Runs a command in a PTY, returning output or a session ID for ongoing interaction."
+            "Runs a command in a powershell, returning output or a session ID for ongoing interaction."
                 .to_string(),
         strict: false,
         parameters: JsonSchema::Object {
             properties,
-            required: Some(vec!["cmd".to_string()]),
+            required: Some(vec!["cmd".to_string(), "max_output_tokens".to_string()]),
             additional_properties: Some(false.into()),
         },
     })
@@ -307,7 +301,7 @@ fn create_write_stdin_tool() -> ToolSpec {
         strict: false,
         parameters: JsonSchema::Object {
             properties,
-            required: Some(vec!["session_id".to_string()]),
+            required: Some(vec!["session_id".to_string(), "max_output_tokens".to_string()]),
             additional_properties: Some(false.into()),
         },
     })
