@@ -82,6 +82,7 @@ codex-apply-patch = { path = "apply-patch" }
 codex-arg0 = { path = "arg0" }
 codex-async-utils = { path = "async-utils" }
 codex-backend-client = { path = "backend-client" }
+codex-cloud-requirements = { path = "cloud-requirements" }
 codex-chatgpt = { path = "chatgpt" }
 codex-cli = { path = "cli" }
 codex-client = { path = "codex-client" }
