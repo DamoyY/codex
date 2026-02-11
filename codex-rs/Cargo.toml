@@ -16,7 +16,9 @@ members = [
     "cloud-tasks-client",
     "cli",
     "common",
+    "command",
     "core",
+    "hooks",
     "secrets",
     "exec",
     "exec-server",
@@ -80,7 +82,10 @@ codex-cli = { path = "cli" }
 codex-client = { path = "codex-client" }
 codex-cloud-requirements = { path = "cloud-requirements" }
 codex-common = { path = "common" }
+codex-command = { path = "command" }
 codex-core = { path = "core" }
+codex-hooks = { path = "hooks" }
+codex-secrets = { path = "secrets" }
 codex-exec = { path = "exec" }
 codex-execpolicy = { path = "execpolicy" }
 codex-experimental-api-macros = { path = "codex-experimental-api-macros" }
@@ -131,6 +136,7 @@ assert_matches = "*"
 async-channel = "*"
 async-stream = "*"
 async-trait = "*"
+askama = "*"
 axum = { version = "*", default-features = false }
 base64 = "*"
 bm25 = "*"
