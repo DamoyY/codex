@@ -4096,7 +4096,7 @@ async fn model_picker_hides_show_in_picker_false_models_from_cache() {
 }
 
 #[tokio::test]
-async fn model_cap_error_does_not_switch_models() {
+async fn server_overloaded_error_does_not_switch_models() {
     let (mut chat, mut rx, mut op_rx) = make_chatwidget_manual(Some("boomslang")).await;
     chat.set_model("boomslang");
     while rx.try_recv().is_ok() {}
@@ -4105,11 +4105,8 @@ async fn model_cap_error_does_not_switch_models() {
     chat.handle_codex_event(Event {
         id: "err-1".to_string(),
         msg: EventMsg::Error(ErrorEvent {
-            message: "model cap".to_string(),
-            codex_error_info: Some(CodexErrorInfo::ModelCap {
-                model: "boomslang".to_string(),
-                reset_after_seconds: Some(120),
-            }),
+            message: "server overloaded".to_string(),
+            codex_error_info: Some(CodexErrorInfo::ServerOverloaded),
         }),
     });
 
@@ -4117,7 +4114,7 @@ async fn model_cap_error_does_not_switch_models() {
         if let AppEvent::UpdateModel(model) = event {
             assert_eq!(
                 model, "boomslang",
-                "did not expect model switch on model-cap error"
+                "did not expect model switch on server-overloaded error"
             );
         }
     }
@@ -4126,7 +4123,7 @@ async fn model_cap_error_does_not_switch_models() {
         if let Op::OverrideTurnContext { model, .. } = event {
             assert!(
                 model.is_none(),
-                "did not expect OverrideTurnContext model update on model-cap error"
+                "did not expect OverrideTurnContext model update on server-overloaded error"
             );
         }
     }
@@ -4161,13 +4158,22 @@ async fn approvals_selection_popup_snapshot_windows_degraded_sandbox() {
     chat.open_approvals_popup();
 
     let popup = render_bottom_popup(&chat, 80);
-    insta::with_settings!({ snapshot_suffix => "windows_degraded" }, {
-        assert_snapshot!("approvals_selection_popup", popup);
-    });
+    assert!(
+        popup.contains("Default (non-admin sandbox)"),
+        "expected degraded sandbox label in approvals popup: {popup}"
+    );
+    assert!(
+        popup.contains("/setup-default-sandbox"),
+        "expected setup hint in approvals popup: {popup}"
+    );
+    assert!(
+        popup.contains("non-admin sandbox"),
+        "expected degraded sandbox note in approvals popup: {popup}"
+    );
 }
 
 #[tokio::test]
-async fn preset_matching_ignores_extra_writable_roots() {
+async fn preset_matching_requires_exact_workspace_write_settings() {
     let preset = builtin_approval_presets()
         .into_iter()
         .find(|p| p.id == "auto")
@@ -4180,8 +4186,8 @@ async fn preset_matching_ignores_extra_writable_roots() {
     };
 
     assert!(
-        ChatWidget::preset_matches_current(AskForApproval::OnRequest, &current_sandbox, &preset),
-        "WorkspaceWrite with extra roots should still match the Agent preset"
+        !ChatWidget::preset_matches_current(AskForApproval::OnRequest, &current_sandbox, &preset),
+        "WorkspaceWrite with extra roots should not match the Default preset"
     );
     assert!(
         !ChatWidget::preset_matches_current(AskForApproval::Never, &current_sandbox, &preset),
@@ -4216,8 +4222,12 @@ async fn windows_auto_mode_prompt_requests_enabling_sandbox_feature() {
 
     let popup = render_bottom_popup(&chat, 120);
     assert!(
-        popup.contains("requires elevation"),
-        "expected auto mode prompt to mention elevation, popup: {popup}"
+        popup.contains("requires Administrator permissions"),
+        "expected auto mode prompt to mention Administrator permissions, popup: {popup}"
+    );
+    assert!(
+        popup.contains("Use non-admin sandbox"),
+        "expected auto mode prompt to include non-admin fallback option, popup: {popup}"
     );
 }
 
@@ -4228,22 +4238,40 @@ async fn startup_prompts_for_windows_sandbox_when_agent_requested() {
 
     chat.set_feature_enabled(Feature::WindowsSandbox, false);
     chat.set_feature_enabled(Feature::WindowsSandboxElevated, false);
-    chat.config.forced_auto_mode_downgraded_on_windows = true;
 
-    chat.maybe_prompt_windows_sandbox_enable();
+    chat.maybe_prompt_windows_sandbox_enable(true);
 
     let popup = render_bottom_popup(&chat, 120);
     assert!(
-        popup.contains("requires elevation"),
-        "expected startup prompt to explain elevation: {popup}"
+        popup.contains("requires Administrator permissions"),
+        "expected startup prompt to mention Administrator permissions: {popup}"
     );
     assert!(
-        popup.contains("Set up agent sandbox"),
-        "expected startup prompt to offer agent sandbox setup: {popup}"
+        popup.contains("Set up default sandbox"),
+        "expected startup prompt to offer default sandbox setup: {popup}"
     );
     assert!(
-        popup.contains("Stay in"),
-        "expected startup prompt to offer staying in current mode: {popup}"
+        popup.contains("Use non-admin sandbox"),
+        "expected startup prompt to offer non-admin fallback: {popup}"
+    );
+    assert!(
+        popup.contains("Quit"),
+        "expected startup prompt to offer quit action: {popup}"
+    );
+}
+
+#[cfg(target_os = "windows")]
+#[tokio::test]
+async fn startup_does_not_prompt_for_windows_sandbox_when_not_requested() {
+    let (mut chat, _rx, _op_rx) = make_chatwidget_manual(None).await;
+
+    chat.set_feature_enabled(Feature::WindowsSandbox, false);
+    chat.set_feature_enabled(Feature::WindowsSandboxElevated, false);
+    chat.maybe_prompt_windows_sandbox_enable(false);
+
+    assert!(
+        chat.bottom_pane.no_modal_or_popup_active(),
+        "expected no startup sandbox NUX popup when startup trigger is false"
     );
 }
 
