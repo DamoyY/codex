@@ -101,6 +101,9 @@ impl ToolsConfig {
 
 pub(crate) fn filter_tools_for_model(tools: Vec<ToolSpec>, _config: &ToolsConfig) -> Vec<ToolSpec> {
     tools
+        .into_iter()
+        .filter(|tool| tool.name() != "update_plan")
+        .collect()
 }
 
 /// Generic JSON‑Schema subset needed for our tool definitions

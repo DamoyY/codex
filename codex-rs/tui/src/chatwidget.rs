@@ -1515,8 +1515,8 @@ impl ChatWidget {
             self.plan_type = snapshot.plan_type.or(self.plan_type);
 
             let is_codex_limit = limit_id.eq_ignore_ascii_case("codex");
-            let warnings = if is_codex_limit {
-                self.rate_limit_warnings.take_warnings(
+            if is_codex_limit {
+                let _ = self.rate_limit_warnings.take_warnings(
                     snapshot
                         .secondary
                         .as_ref()
@@ -1530,10 +1530,8 @@ impl ChatWidget {
                         .primary
                         .as_ref()
                         .and_then(|window| window.window_minutes),
-                )
-            } else {
-                vec![]
-            };
+                );
+            }
 
             let high_usage = is_codex_limit
                 && (snapshot
@@ -1562,13 +1560,6 @@ impl ChatWidget {
                 rate_limit_snapshot_display_for_limit(&snapshot, limit_label, Local::now());
             self.rate_limit_snapshots_by_limit_id
                 .insert(limit_id, display);
-
-            if !warnings.is_empty() {
-                for warning in warnings {
-                    self.add_to_history(history_cell::new_warning_event(warning));
-                }
-                self.request_redraw();
-            }
         } else {
             self.rate_limit_snapshots_by_limit_id.clear();
         }
