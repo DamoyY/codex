@@ -5693,7 +5693,9 @@ impl ChatWidget {
         let mut header = ColumnRenderable::new();
         header.push(*Box::new(
             Paragraph::new(vec![
-                line!["Set up the Codex agent sandbox to protect your files and control network access. Learn more <https://developers.openai.com/codex/windows>"],
+                Line::from(
+                    "Set up the Codex agent sandbox to protect your files and control network access. Learn more <https://developers.openai.com/codex/windows>",
+                ),
             ])
             .wrap(Wrap { trim: false }),
         ));
@@ -5760,16 +5762,16 @@ impl ChatWidget {
         let _ = reason;
 
         let mut lines = Vec::new();
-        lines.push(line![
-            "Couldn't set up your sandbox with Administrator permissions".bold()
-        ]);
-        lines.push(line![""]);
-        lines.push(line![
-            "You can still use Codex in a non-admin sandbox. It carries greater risk if prompt injected."
-        ]);
-        lines.push(line![
-            "Learn more <https://developers.openai.com/codex/windows>"
-        ]);
+        lines.push(Line::from(
+            "Couldn't set up your sandbox with Administrator permissions".bold(),
+        ));
+        lines.push(Line::from(""));
+        lines.push(Line::from(
+            "You can still use Codex in a non-admin sandbox. It carries greater risk if prompt injected.",
+        ));
+        lines.push(Line::from(
+            "Learn more <https://developers.openai.com/codex/windows>",
+        ));
 
         let mut header = ColumnRenderable::new();
         header.push(*Box::new(Paragraph::new(lines).wrap(Wrap { trim: false })));
