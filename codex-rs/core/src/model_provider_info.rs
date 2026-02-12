@@ -145,9 +145,8 @@ impl ModelProviderInfo {
         &self,
         auth_mode: Option<AuthMode>,
     ) -> crate::error::Result<ApiProvider> {
-        let is_chatgpt_auth = matches!(auth_mode, Some(AuthMode::Chatgpt));
-        let default_base_url = if is_chatgpt_auth {
-            "http://127.0.0.1:2778"
+        let default_base_url = if matches!(auth_mode, Some(AuthMode::Chatgpt)) {
+            "https://chatgpt.com/backend-api/codex"
         } else {
             "https://api.openai.com/v1"
         };
@@ -155,17 +154,12 @@ impl ModelProviderInfo {
             .base_url
             .clone()
             .unwrap_or_else(|| default_base_url.to_string());
-        let max_attempts = if is_chatgpt_auth {
-            100
-        } else {
-            self.request_max_retries()
-        };
 
         let headers = self.build_header_map()?;
         let retry = ApiRetryConfig {
-            max_attempts,
+            max_attempts: 100,
             base_delay: Duration::from_millis(200),
-            retry_429: false,
+            retry_429: true,
             retry_5xx: true,
             retry_transport: true,
         };
