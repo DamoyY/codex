@@ -213,7 +213,7 @@ ratatui-macros = "*"
 regex = "*"
 regex-lite = "*"
 reqwest = { version = "*", features = ["json", "rustls-tls"] }
-rmcp = { version = "0.14", default-features = false }
+rmcp = { version = "*", default-features = false }
 runfiles = { git = "https://github.com/dzbarsky/rules_rust", rev = "b56cbaa8465e74127f1ea216f813cd377295ad81" }
 rustls = { version = "*", default-features = false, features = [
     "ring",
