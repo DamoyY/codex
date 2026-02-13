@@ -1,0 +1,13 @@
+[package]
+name = "codex-utils-sleep-inhibitor"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[target.'cfg(target_os = "macos")'.dependencies]
+core-foundation = "*"
+libc = { workspace = true }
+tracing = { workspace = true }
