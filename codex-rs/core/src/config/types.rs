@@ -336,6 +336,29 @@ pub enum HistoryPersistence {
     None,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum AppDisabledReason {
+    Unknown,
+    User,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, JsonSchema)]
+#[schemars(deny_unknown_fields)]
+pub struct AppConfigToml {
+    #[serde(default = "default_enabled")]
+    pub enabled: bool,
+    pub disabled_reason: Option<AppDisabledReason>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Default, JsonSchema)]
+#[schemars(deny_unknown_fields)]
+pub struct AppsConfigToml {
+    #[serde(default, flatten)]
+    #[schemars(with = "HashMap<String, AppConfigToml>")]
+    pub apps: HashMap<String, AppConfigToml>,
+}
+
 // ===== Analytics configuration =====
 
 /// Analytics settings loaded from config.toml. Fields are optional so we can apply defaults.

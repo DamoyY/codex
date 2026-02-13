@@ -442,13 +442,7 @@ pub const FEATURES: &[FeatureSpec] = &[
         id: Feature::JsReplToolsOnly,
         key: "js_repl_tools_only",
         stage: Stage::UnderDevelopment,
-        default_enabled: false,
-    },
-    FeatureSpec {
-        id: Feature::JsReplToolsOnly,
-        key: "js_repl_tools_only",
-        stage: Stage::UnderDevelopment,
-        default_enabled: false,
+        default_enabled: true,
     },
     FeatureSpec {
         id: Feature::WebSearchRequest,
@@ -578,13 +572,7 @@ pub const FEATURES: &[FeatureSpec] = &[
         id: Feature::AppsMcpGateway,
         key: "apps_mcp_gateway",
         stage: Stage::UnderDevelopment,
-        default_enabled: false,
-    },
-    FeatureSpec {
-        id: Feature::AppsMcpGateway,
-        key: "apps_mcp_gateway",
-        stage: Stage::UnderDevelopment,
-        default_enabled: false,
+        default_enabled: true,
     },
     FeatureSpec {
         id: Feature::SkillMcpDependencyInstall,
