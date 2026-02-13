@@ -109,6 +109,10 @@ pub(crate) fn filter_tools_for_model(tools: Vec<ToolSpec>, config: &ToolsConfig)
     }
 
     tools
+        .into_iter()
+        .filter(|tool| tool.name() != "update_plan")
+        .filter(|spec| matches!(spec.name(), "js_repl" | "js_repl_reset"))
+        .collect()
 }
 
 /// Generic JSON‑Schema subset needed for our tool definitions
