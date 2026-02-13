@@ -4573,6 +4573,7 @@ impl ChatWidget {
                 let connectors = connectors::merge_connectors_with_accessible(
                     all_connectors,
                     accessible_connectors,
+                    true,
                 );
                 Ok(ConnectorsSnapshot { connectors })
             }
@@ -6729,6 +6730,7 @@ impl ChatWidget {
                     snapshot.connectors = connectors::merge_connectors_with_accessible(
                         Vec::new(),
                         snapshot.connectors,
+                        false,
                     );
                 }
                 snapshot.connectors =
