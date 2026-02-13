@@ -448,23 +448,6 @@ pub struct AppsConfigToml {
     pub apps: HashMap<String, AppConfigToml>,
 }
 
-// ===== Analytics configuration =====
-
-/// Analytics settings loaded from config.toml. Fields are optional so we can apply defaults.
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Default, JsonSchema)]
-#[schemars(deny_unknown_fields)]
-pub struct AnalyticsConfigToml {
-    /// When `false`, disables analytics across Codex product surfaces in this profile.
-    pub enabled: Option<bool>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Default, JsonSchema)]
-#[schemars(deny_unknown_fields)]
-pub struct FeedbackConfigToml {
-    /// When `false`, disables the feedback flow across Codex product surfaces.
-    pub enabled: Option<bool>,
-}
-
 // ===== OTEL configuration =====
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, JsonSchema)]
