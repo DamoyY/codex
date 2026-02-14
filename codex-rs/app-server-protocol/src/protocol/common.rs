@@ -760,6 +760,13 @@ pub struct FuzzyFileSearchSessionUpdatedNotification {
     pub files: Vec<FuzzyFileSearchResult>,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, JsonSchema, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(rename_all = "camelCase")]
+pub struct FuzzyFileSearchSessionCompletedNotification {
+    pub session_id: String,
+}
+
 server_notification_definitions! {
     /// NEW NOTIFICATIONS
     Error => "error" (v2::ErrorNotification),
@@ -793,6 +800,7 @@ server_notification_definitions! {
     DeprecationNotice => "deprecationNotice" (v2::DeprecationNoticeNotification),
     ConfigWarning => "configWarning" (v2::ConfigWarningNotification),
     FuzzyFileSearchSessionUpdated => "fuzzyFileSearch/sessionUpdated" (FuzzyFileSearchSessionUpdatedNotification),
+    FuzzyFileSearchSessionCompleted => "fuzzyFileSearch/sessionCompleted" (FuzzyFileSearchSessionCompletedNotification),
 
     /// Notifies the user of world-writable directories on Windows, which cannot be protected by the sandbox.
     WindowsWorldWritableWarning => "windows/worldWritableWarning" (v2::WindowsWorldWritableWarningNotification),
@@ -1229,7 +1237,8 @@ mod tests {
                 "id": 6,
                 "params": {
                     "limit": null,
-                    "cursor": null
+                    "cursor": null,
+                    "includeHidden": null
                 }
             }),
             serde_json::to_value(&request)?,
