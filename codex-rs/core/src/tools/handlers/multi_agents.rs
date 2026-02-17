@@ -148,6 +148,11 @@ mod spawn {
         apply_role_to_config(&mut config, role_name)
             .await
             .map_err(FunctionCallError::RespondToModel)?;
+        config.model = Some(turn.model_info.slug.clone());
+        config.model_provider_id = turn.config.model_provider_id.clone();
+        config.model_provider = turn.provider.clone();
+        config.model_reasoning_effort = turn.reasoning_effort;
+        config.model_reasoning_summary = turn.reasoning_summary;
         apply_spawn_agent_overrides(&mut config, child_depth);
 
         let result = session
@@ -997,6 +1002,7 @@ mod tests {
         }
 
         let (mut session, mut turn) = make_session_and_context().await;
+        let expected_model = turn.model_info.slug.clone();
         let manager = thread_manager();
         session.services.agent_control = manager.agent_control();
         let mut config = (*turn.config).clone();
@@ -1036,7 +1042,7 @@ mod tests {
             .expect("spawned agent thread should exist")
             .config_snapshot()
             .await;
-        assert_eq!(snapshot.model, "gpt-5.1-codex-mini");
+        assert_eq!(snapshot.model, expected_model);
         assert_eq!(snapshot.approval_policy, AskForApproval::Never);
     }
 
