@@ -2649,15 +2649,6 @@ impl Session {
     ) -> Vec<ResponseItem> {
         let mut items = Vec::<ResponseItem>::with_capacity(4);
         let shell = self.user_shell();
-        items.push(
-            DeveloperInstructions::from_policy(
-                &turn_context.sandbox_policy,
-                turn_context.approval_policy,
-                self.services.exec_policy.current().as_ref(),
-                &turn_context.cwd,
-            )
-            .into(),
-        );
         if let Some(developer_instructions) = turn_context.developer_instructions.as_deref() {
             items.push(DeveloperInstructions::new(developer_instructions.to_string()).into());
         }

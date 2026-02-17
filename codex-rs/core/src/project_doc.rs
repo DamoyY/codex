@@ -93,14 +93,6 @@ pub(crate) async fn get_user_instructions(
         output.push_str(&js_repl_section);
     }
 
-    let skills_section = skills.and_then(render_skills_section);
-    if let Some(skills_section) = skills_section {
-        if !output.is_empty() {
-            output.push_str("\n\n");
-        }
-        output.push_str(&skills_section);
-    }
-
     if config.features.enabled(Feature::ChildAgentsMd) {
         if !output.is_empty() {
             output.push_str("\n\n");

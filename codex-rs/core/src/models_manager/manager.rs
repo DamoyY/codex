@@ -336,20 +336,12 @@ impl ModelsManager {
         merged_presets
     }
 
-    async fn get_remote_models(&self, config: &Config) -> Vec<ModelInfo> {
-        if config.features.enabled(Feature::RemoteModels) {
-            self.remote_models.read().await.clone()
-        } else {
-            Vec::new()
-        }
+    async fn get_remote_models(&self, _config: &Config) -> Vec<ModelInfo> {
+        self.remote_models.read().await.clone()
     }
 
-    fn try_get_remote_models(&self, config: &Config) -> Result<Vec<ModelInfo>, TryLockError> {
-        if config.features.enabled(Feature::RemoteModels) {
-            Ok(self.remote_models.try_read()?.clone())
-        } else {
-            Ok(Vec::new())
-        }
+    fn try_get_remote_models(&self, _config: &Config) -> Result<Vec<ModelInfo>, TryLockError> {
+        Ok(self.remote_models.try_read()?.clone())
     }
 
     /// Construct a manager with a specific provider for testing.
