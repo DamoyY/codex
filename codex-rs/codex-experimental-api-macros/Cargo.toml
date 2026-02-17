@@ -8,9 +8,9 @@ license.workspace = true
 proc-macro = true
 
 [dependencies]
-proc-macro2 = "1"
-quote = "1"
-syn = { version = "2", features = ["full", "extra-traits"] }
+proc-macro2 = "*"
+quote = "*"
+syn = { version = "*", features = ["full", "extra-traits"] }
 
 [lints]
 workspace = true

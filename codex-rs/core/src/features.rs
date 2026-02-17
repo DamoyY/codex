@@ -414,7 +414,7 @@ pub const FEATURES: &[FeatureSpec] = &[
         id: Feature::GhostCommit,
         key: "undo",
         stage: Stage::Stable,
-        default_enabled: false,
+        default_enabled: true,
     },
     FeatureSpec {
         id: Feature::ShellTool,
@@ -438,13 +438,13 @@ pub const FEATURES: &[FeatureSpec] = &[
         id: Feature::JsRepl,
         key: "js_repl",
         stage: Stage::UnderDevelopment,
-        default_enabled: false,
+        default_enabled: true,
     },
     FeatureSpec {
         id: Feature::JsReplToolsOnly,
         key: "js_repl_tools_only",
         stage: Stage::UnderDevelopment,
-        default_enabled: false,
+        default_enabled: true,
     },
     FeatureSpec {
         id: Feature::WebSearchRequest,
@@ -469,31 +469,31 @@ pub const FEATURES: &[FeatureSpec] = &[
         id: Feature::RuntimeMetrics,
         key: "runtime_metrics",
         stage: Stage::UnderDevelopment,
-        default_enabled: false,
+        default_enabled: true,
     },
     FeatureSpec {
         id: Feature::Sqlite,
         key: "sqlite",
         stage: Stage::UnderDevelopment,
-        default_enabled: false,
+        default_enabled: true,
     },
     FeatureSpec {
         id: Feature::MemoryTool,
         key: "memory_tool",
         stage: Stage::UnderDevelopment,
-        default_enabled: false,
+        default_enabled: true,
     },
     FeatureSpec {
         id: Feature::ChildAgentsMd,
         key: "child_agents_md",
         stage: Stage::UnderDevelopment,
-        default_enabled: false,
+        default_enabled: true,
     },
     FeatureSpec {
         id: Feature::ApplyPatchFreeform,
         key: "apply_patch_freeform",
         stage: Stage::UnderDevelopment,
-        default_enabled: false,
+        default_enabled: true,
     },
     FeatureSpec {
         id: Feature::UseLinuxSandboxBwrap,
@@ -506,7 +506,7 @@ pub const FEATURES: &[FeatureSpec] = &[
         },
         #[cfg(not(target_os = "linux"))]
         stage: Stage::UnderDevelopment,
-        default_enabled: false,
+        default_enabled: true,
     },
     FeatureSpec {
         id: Feature::RequestRule,
@@ -542,7 +542,7 @@ pub const FEATURES: &[FeatureSpec] = &[
         #[cfg(not(windows))]
         stage: Stage::UnderDevelopment,
         #[cfg(not(windows))]
-        default_enabled: false,
+        default_enabled: true,
     },
     FeatureSpec {
         id: Feature::EnableRequestCompression,
@@ -558,7 +558,7 @@ pub const FEATURES: &[FeatureSpec] = &[
             menu_description: "Ask Codex to spawn multiple agents to parallelize the work and win in efficiency.",
             announcement: "NEW: Sub-agents can now be spawned by Codex. Enable in /experimental and restart Codex!",
         },
-        default_enabled: false,
+        default_enabled: true,
     },
     FeatureSpec {
         id: Feature::Apps,
@@ -568,13 +568,13 @@ pub const FEATURES: &[FeatureSpec] = &[
             menu_description: "Use a connected ChatGPT App using \"$\". Install Apps via /apps command. Restart Codex after enabling.",
             announcement: "NEW: Use ChatGPT Apps (Connectors) in Codex via $ mentions. Enable in /experimental and restart Codex!",
         },
-        default_enabled: false,
+        default_enabled: true,
     },
     FeatureSpec {
         id: Feature::AppsMcpGateway,
         key: "apps_mcp_gateway",
         stage: Stage::UnderDevelopment,
-        default_enabled: false,
+        default_enabled: true,
     },
     FeatureSpec {
         id: Feature::SkillMcpDependencyInstall,
@@ -586,7 +586,7 @@ pub const FEATURES: &[FeatureSpec] = &[
         id: Feature::SkillEnvVarDependencyPrompt,
         key: "skill_env_var_dependency_prompt",
         stage: Stage::UnderDevelopment,
-        default_enabled: false,
+        default_enabled: true,
     },
     FeatureSpec {
         id: Feature::Steer,
@@ -618,19 +618,19 @@ pub const FEATURES: &[FeatureSpec] = &[
         } else {
             Stage::UnderDevelopment
         },
-        default_enabled: false,
+        default_enabled: true,
     },
     FeatureSpec {
         id: Feature::ResponsesWebsockets,
         key: "responses_websockets",
         stage: Stage::UnderDevelopment,
-        default_enabled: false,
+        default_enabled: true,
     },
     FeatureSpec {
         id: Feature::ResponsesWebsocketsV2,
         key: "responses_websockets_v2",
         stage: Stage::UnderDevelopment,
-        default_enabled: false,
+        default_enabled: true,
     },
 ];
 

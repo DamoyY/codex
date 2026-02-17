@@ -493,32 +493,36 @@ impl UpdateAvailableHistoryCell {
 
 impl HistoryCell for UpdateAvailableHistoryCell {
     fn display_lines(&self, width: u16) -> Vec<Line<'static>> {
-        use ratatui_macros::line;
-        use ratatui_macros::text;
         let update_instruction = if let Some(update_action) = self.update_action {
-            line!["Run ", update_action.command_str().cyan(), " to update."]
+            Line::from(vec![
+                "Run ".into(),
+                update_action.command_str().cyan(),
+                " to update.".into(),
+            ])
         } else {
-            line![
-                "See ",
+            Line::from(vec![
+                "See ".into(),
                 "https://github.com/openai/codex".cyan().underlined(),
-                " for installation options."
-            ]
+                " for installation options.".into(),
+            ])
         };
 
-        let content = text![
-            line![
+        let content = Text::from(vec![
+            Line::from(vec![
                 padded_emoji("✨").bold().cyan(),
                 "Update available!".bold().cyan(),
-                " ",
+                " ".into(),
                 format!("{CODEX_CLI_VERSION} -> {}", self.latest_version).bold(),
-            ],
+            ]),
             update_instruction,
-            "",
-            "See full release notes:",
-            "https://github.com/openai/codex/releases/latest"
-                .cyan()
-                .underlined(),
-        ];
+            Line::from(""),
+            Line::from("See full release notes:"),
+            Line::from(
+                "https://github.com/openai/codex/releases/latest"
+                    .cyan()
+                    .underlined(),
+            ),
+        ]);
 
         let inner_width = content
             .width()
@@ -1193,10 +1197,10 @@ impl HistoryCell for SessionHeaderHistoryCell {
 
         // Title line rendered inside the box: ">_ OpenAI Codex (vX)"
         let title_spans: Vec<Span<'static>> = vec![
-            Span::from(">_ ").dim(),
-            Span::from("OpenAI Codex").bold(),
+            Span::from("🌈 ").dim(),
+            Span::from("循此苦旅").bold(),
             Span::from(" ").dim(),
-            Span::from(format!("(v{})", self.version)).dim(),
+            Span::from(format!("終抵繁星")).dim(),
         ];
 
         const CHANGE_MODEL_HINT_COMMAND: &str = "/model";

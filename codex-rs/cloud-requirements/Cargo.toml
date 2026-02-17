@@ -15,7 +15,7 @@ codex-backend-client = { workspace = true }
 codex-core = { workspace = true }
 codex-otel = { workspace = true }
 codex-protocol = { workspace = true }
-hmac = "0.12.1"
+hmac = "*"
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 sha2 = { workspace = true }

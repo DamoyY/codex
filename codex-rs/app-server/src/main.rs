@@ -23,6 +23,8 @@ struct AppServerArgs {
 }
 
 fn main() -> anyhow::Result<()> {
+    rustls::crypto::ring::default_provider()
+        .install_default();
     arg0_dispatch_or_else(|codex_linux_sandbox_exe| async move {
         let args = AppServerArgs::parse();
         let managed_config_path = managed_config_path_from_debug_env();

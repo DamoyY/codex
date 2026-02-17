@@ -1516,8 +1516,8 @@ impl ChatWidget {
             self.plan_type = snapshot.plan_type.or(self.plan_type);
 
             let is_codex_limit = limit_id.eq_ignore_ascii_case("codex");
-            let warnings = if is_codex_limit {
-                self.rate_limit_warnings.take_warnings(
+            if is_codex_limit {
+                let _ = self.rate_limit_warnings.take_warnings(
                     snapshot
                         .secondary
                         .as_ref()
@@ -1531,10 +1531,8 @@ impl ChatWidget {
                         .primary
                         .as_ref()
                         .and_then(|window| window.window_minutes),
-                )
-            } else {
-                vec![]
-            };
+                );
+            }
 
             let high_usage = is_codex_limit
                 && (snapshot
@@ -1563,13 +1561,6 @@ impl ChatWidget {
                 rate_limit_snapshot_display_for_limit(&snapshot, limit_label, Local::now());
             self.rate_limit_snapshots_by_limit_id
                 .insert(limit_id, display);
-
-            if !warnings.is_empty() {
-                for warning in warnings {
-                    self.add_to_history(history_cell::new_warning_event(warning));
-                }
-                self.request_redraw();
-            }
         } else {
             self.rate_limit_snapshots_by_limit_id.clear();
         }
@@ -5752,16 +5743,16 @@ impl ChatWidget {
 
     #[cfg(target_os = "windows")]
     pub(crate) fn open_windows_sandbox_enable_prompt(&mut self, preset: ApprovalPreset) {
-        use ratatui_macros::line;
-
         if !codex_core::windows_sandbox::ELEVATED_SANDBOX_NUX_ENABLED {
             // Legacy flow (pre-NUX): explain the experimental sandbox and let the user enable it
             // directly (no elevation prompts).
             let mut header = ColumnRenderable::new();
             header.push(*Box::new(
                 Paragraph::new(vec![
-                    line!["Agent mode on Windows uses an experimental sandbox to limit network and filesystem access.".bold()],
-                    line!["Learn more: https://developers.openai.com/codex/windows"],
+                    Line::from(
+                        "Agent mode on Windows uses an experimental sandbox to limit network and filesystem access.".bold(),
+                    ),
+                    Line::from("Learn more: https://developers.openai.com/codex/windows"),
                 ])
                 .wrap(Wrap { trim: false }),
             ));
@@ -5807,7 +5798,9 @@ impl ChatWidget {
         let mut header = ColumnRenderable::new();
         header.push(*Box::new(
             Paragraph::new(vec![
-                line!["Set up the Codex agent sandbox to protect your files and control network access. Learn more <https://developers.openai.com/codex/windows>"],
+                Line::from(
+                    "Set up the Codex agent sandbox to protect your files and control network access. Learn more <https://developers.openai.com/codex/windows>",
+                ),
             ])
             .wrap(Wrap { trim: false }),
         ));
@@ -5870,16 +5863,16 @@ impl ChatWidget {
         use ratatui_macros::line;
 
         let mut lines = Vec::new();
-        lines.push(line![
-            "Couldn't set up your sandbox with Administrator permissions".bold()
-        ]);
-        lines.push(line![""]);
-        lines.push(line![
-            "You can still use Codex in a non-admin sandbox. It carries greater risk if prompt injected."
-        ]);
-        lines.push(line![
-            "Learn more <https://developers.openai.com/codex/windows>"
-        ]);
+        lines.push(Line::from(
+            "Couldn't set up your sandbox with Administrator permissions".bold(),
+        ));
+        lines.push(Line::from(""));
+        lines.push(Line::from(
+            "You can still use Codex in a non-admin sandbox. It carries greater risk if prompt injected.",
+        ));
+        lines.push(Line::from(
+            "Learn more <https://developers.openai.com/codex/windows>",
+        ));
 
         let mut header = ColumnRenderable::new();
         header.push(*Box::new(Paragraph::new(lines).wrap(Wrap { trim: false })));

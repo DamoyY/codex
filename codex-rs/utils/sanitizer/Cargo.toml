@@ -5,7 +5,7 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-regex = "1.12.3"
+regex = "*"
 
 [lints]
 workspace = true

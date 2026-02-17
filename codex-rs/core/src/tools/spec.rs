@@ -1474,7 +1474,6 @@ pub(crate) fn build_specs(
         builder.register_handler("read_mcp_resource", mcp_resource_handler);
     }
 
-    builder.push_spec(PLAN_TOOL.clone());
     builder.register_handler("update_plan", plan_handler);
 
     if config.js_repl_enabled {
