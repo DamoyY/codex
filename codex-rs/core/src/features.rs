@@ -480,7 +480,7 @@ pub const FEATURES: &[FeatureSpec] = &[
         id: Feature::CodexGitCommit,
         key: "codex_git_commit",
         stage: Stage::UnderDevelopment,
-        default_enabled: false,
+        default_enabled: true,
     },
     FeatureSpec {
         id: Feature::RuntimeMetrics,
