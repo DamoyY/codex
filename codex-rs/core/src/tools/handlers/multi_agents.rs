@@ -432,7 +432,7 @@ mod resume_agent {
     }
 }
 
-mod wait {
+pub(crate) mod wait {
     use super::*;
     use crate::agent::status::is_final;
     use futures::FutureExt;
@@ -452,10 +452,10 @@ mod wait {
         timeout_ms: Option<i64>,
     }
 
-    #[derive(Debug, Serialize)]
-    struct WaitResult {
-        status: HashMap<ThreadId, AgentStatus>,
-        timed_out: bool,
+    #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
+    pub(crate) struct WaitResult {
+        pub(crate) status: HashMap<ThreadId, AgentStatus>,
+        pub(crate) timed_out: bool,
     }
 
     pub async fn handle(
@@ -1468,12 +1468,6 @@ mod tests {
         );
     }
 
-    #[derive(Debug, Deserialize, PartialEq, Eq)]
-    struct WaitResult {
-        status: HashMap<ThreadId, AgentStatus>,
-        timed_out: bool,
-    }
-
     #[tokio::test]
     async fn wait_rejects_non_positive_timeout() {
         let (session, turn) = make_session_and_context().await;
@@ -1559,11 +1553,11 @@ mod tests {
         else {
             panic!("expected function output");
         };
-        let result: WaitResult =
+        let result: wait::WaitResult =
             serde_json::from_str(&content).expect("wait result should be json");
         assert_eq!(
             result,
-            WaitResult {
+            wait::WaitResult {
                 status: HashMap::from([
                     (id_a, AgentStatus::NotFound),
                     (id_b, AgentStatus::NotFound),
@@ -1603,11 +1597,11 @@ mod tests {
         else {
             panic!("expected function output");
         };
-        let result: WaitResult =
+        let result: wait::WaitResult =
             serde_json::from_str(&content).expect("wait result should be json");
         assert_eq!(
             result,
-            WaitResult {
+            wait::WaitResult {
                 status: HashMap::new(),
                 timed_out: true
             }
@@ -1700,11 +1694,11 @@ mod tests {
         else {
             panic!("expected function output");
         };
-        let result: WaitResult =
+        let result: wait::WaitResult =
             serde_json::from_str(&content).expect("wait result should be json");
         assert_eq!(
             result,
-            WaitResult {
+            wait::WaitResult {
                 status: HashMap::from([(agent_id, AgentStatus::Shutdown)]),
                 timed_out: false
             }
