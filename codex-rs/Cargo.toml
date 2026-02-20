@@ -144,7 +144,6 @@ allocative = "*"
 ansi-to-tui = "7"
 anyhow = "*"
 arboard = { version = "*", features = ["wayland-data-control"] }
-askama = "*"
 assert_cmd = "*"
 assert_matches = "*"
 async-channel = "*"
