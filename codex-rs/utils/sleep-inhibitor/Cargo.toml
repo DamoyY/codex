@@ -9,5 +9,4 @@ workspace = true
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation = "*"
-libc = { workspace = true }
 tracing = { workspace = true }
