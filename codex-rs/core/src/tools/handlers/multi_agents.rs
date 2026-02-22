@@ -924,7 +924,7 @@ fn build_agent_shared_config(
     config
         .permissions
         .sandbox_policy
-        .set(turn.sandbox_policy.clone())
+        .set(turn.sandbox_policy.get().clone())
         .map_err(|err| {
             FunctionCallError::RespondToModel(format!("sandbox_policy is invalid: {err}"))
         })?;
@@ -1919,10 +1919,13 @@ mod tests {
         let temp_dir = tempfile::tempdir().expect("temp dir");
         turn.cwd = temp_dir.path().to_path_buf();
         turn.codex_linux_sandbox_exe = Some(PathBuf::from("/bin/echo"));
-        turn.sandbox_policy = pick_allowed_sandbox_policy(
+        let sandbox_policy = pick_allowed_sandbox_policy(
             &turn.config.permissions.sandbox_policy,
             turn.config.permissions.sandbox_policy.get().clone(),
         );
+        turn.sandbox_policy
+            .set(sandbox_policy)
+            .expect("sandbox policy set");
 
         let config = build_agent_spawn_config(&base_instructions, &turn, 0).expect("spawn config");
         let mut expected = (*turn.config).clone();
@@ -1944,7 +1947,7 @@ mod tests {
         expected
             .permissions
             .sandbox_policy
-            .set(turn.sandbox_policy)
+            .set(turn.sandbox_policy.get().clone())
             .expect("sandbox policy set");
         assert_eq!(config, expected);
     }
@@ -1993,7 +1996,7 @@ mod tests {
         expected
             .permissions
             .sandbox_policy
-            .set(turn.sandbox_policy)
+            .set(turn.sandbox_policy.get().clone())
             .expect("sandbox policy set");
         assert_eq!(config, expected);
     }

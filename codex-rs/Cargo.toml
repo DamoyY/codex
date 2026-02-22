@@ -17,6 +17,7 @@ members = [
     "cli",
     "config",
     "shell-command",
+    "skills",
     "core",
     "hooks",
     "secrets",
@@ -111,6 +112,7 @@ codex-responses-api-proxy = { path = "responses-api-proxy" }
 codex-rmcp-client = { path = "rmcp-client" }
 codex-secrets = { path = "secrets" }
 codex-shell-command = { path = "shell-command" }
+codex-skills = { path = "skills" }
 codex-state = { path = "state" }
 codex-stdio-to-uds = { path = "stdio-to-uds" }
 codex-tui = { path = "tui" }
@@ -273,7 +275,7 @@ tracing-subscriber = "*"
 tracing-test = "*"
 tree-sitter = "*"
 tree-sitter-bash = "*"
-tree-sitter-highlight = "*"
+syntect = "*"
 ts-rs = "*"
 tungstenite = { version = "0.27.0", features = ["deflate", "proxy"] }
 uds_windows = "*"
