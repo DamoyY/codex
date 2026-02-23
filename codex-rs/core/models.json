@@ -1,5 +1,5 @@
 {
-  "models": [ 
+  "models": [
     {
       "supports_reasoning_summaries": true,
       "support_verbosity": true,
@@ -14,7 +14,7 @@
         "limit": 10000
       },
       "supports_parallel_tool_calls": true,
-      "context_window": 400000,
+      "context_window": 258000,
       "reasoning_summary_format": "experimental",
       "slug": "gpt-5.3-codex",
       "display_name": "gpt-5.3-codex",
@@ -81,7 +81,7 @@
         "limit": 10000
       },
       "supports_parallel_tool_calls": true,
-      "context_window": 400000,
+      "context_window": 258000,
       "reasoning_summary_format": "experimental",
       "slug": "gpt-5.2-codex",
       "display_name": "gpt-5.2-codex",
@@ -149,7 +149,7 @@
         "limit": 10000
       },
       "supports_parallel_tool_calls": false,
-      "context_window": 400000,
+      "context_window": 258000,
       "reasoning_summary_format": "experimental",
       "slug": "gpt-5.1-codex-max",
       "display_name": "gpt-5.1-codex-max",
@@ -210,7 +210,7 @@
         "limit": 10000
       },
       "supports_parallel_tool_calls": false,
-      "context_window": 400000,
+      "context_window": 258000,
       "reasoning_summary_format": "experimental",
       "slug": "gpt-5.1-codex",
       "display_name": "gpt-5.1-codex",
@@ -267,7 +267,7 @@
         "limit": 10000
       },
       "supports_parallel_tool_calls": true,
-      "context_window": 400000,
+      "context_window": 258000,
       "reasoning_summary_format": "none",
       "slug": "gpt-5.2",
       "display_name": "gpt-5.2",
@@ -328,7 +328,7 @@
         "limit": 10000
       },
       "supports_parallel_tool_calls": true,
-      "context_window": 400000,
+      "context_window": 258000,
       "reasoning_summary_format": "none",
       "slug": "gpt-5.1",
       "display_name": "gpt-5.1",
@@ -385,7 +385,7 @@
         "limit": 10000
       },
       "supports_parallel_tool_calls": false,
-      "context_window": 400000,
+      "context_window": 258000,
       "reasoning_summary_format": "experimental",
       "slug": "gpt-5-codex",
       "display_name": "gpt-5-codex",
@@ -442,7 +442,7 @@
         "limit": 10000
       },
       "supports_parallel_tool_calls": false,
-      "context_window":400000,
+      "context_window": 258000,
       "reasoning_summary_format": "none",
       "slug": "gpt-5",
       "display_name": "gpt-5",
@@ -503,7 +503,7 @@
         "limit": 10000
       },
       "supports_parallel_tool_calls": false,
-      "context_window": 400000,
+      "context_window": 258000,
       "reasoning_summary_format": "experimental",
       "slug": "gpt-5.1-codex-mini",
       "display_name": "gpt-5.1-codex-mini",
@@ -556,7 +556,7 @@
         "limit": 10000
       },
       "supports_parallel_tool_calls": false,
-      "context_window": 400000,
+      "context_window": 258000,
       "reasoning_summary_format": "experimental",
       "slug": "gpt-5-codex-mini",
       "display_name": "gpt-5-codex-mini",
