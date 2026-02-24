@@ -629,7 +629,7 @@ pub const FEATURES: &[FeatureSpec] = &[
         id: Feature::CollaborationModes,
         key: "collaboration_modes",
         stage: Stage::Removed,
-        default_enabled: true,
+        default_enabled: false,
     },
     FeatureSpec {
         id: Feature::Personality,
