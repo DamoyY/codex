@@ -640,6 +640,7 @@ impl TurnContext {
             model_info: &model_info,
             features: &features,
             web_search_mode: self.tools_config.web_search_mode,
+            session_source: self.session_source.clone(),
         })
         .with_allow_login_shell(self.tools_config.allow_login_shell)
         .with_agent_roles(config.agent_roles.clone());
@@ -975,6 +976,7 @@ impl Session {
             model_info: &model_info,
             features: &per_turn_config.features,
             web_search_mode: Some(per_turn_config.web_search_mode.value()),
+            session_source: session_source.clone(),
         })
         .with_allow_login_shell(per_turn_config.permissions.allow_login_shell)
         .with_agent_roles(per_turn_config.agent_roles.clone());
@@ -4582,6 +4584,7 @@ async fn spawn_review_thread(
         model_info: &review_model_info,
         features: &review_features,
         web_search_mode: Some(review_web_search_mode),
+        session_source: parent_turn_context.session_source.clone(),
     })
     .with_allow_login_shell(config.permissions.allow_login_shell)
     .with_agent_roles(config.agent_roles.clone());
@@ -9257,6 +9260,7 @@ mod tests {
                     })
                     .to_string(),
                 },
+                source: ToolCallSource::Direct,
             })
             .await;
 
@@ -9296,6 +9300,7 @@ mod tests {
                     })
                     .to_string(),
                 },
+                source: ToolCallSource::Direct,
             })
             .await;
 
@@ -9355,6 +9360,7 @@ mod tests {
                     })
                     .to_string(),
                 },
+                source: ToolCallSource::Direct,
             })
             .await;
 
