@@ -2867,9 +2867,6 @@ impl ChatWidget {
         };
 
         widget.prefetch_rate_limits();
-        widget
-            .bottom_pane
-            .set_steer_enabled(widget.config.features.enabled(Feature::Steer));
         widget.bottom_pane.set_voice_transcription_enabled(
             widget.config.features.enabled(Feature::VoiceTranscription),
         );
@@ -3044,9 +3041,6 @@ impl ChatWidget {
         };
 
         widget.prefetch_rate_limits();
-        widget
-            .bottom_pane
-            .set_steer_enabled(widget.config.features.enabled(Feature::Steer));
         widget.bottom_pane.set_voice_transcription_enabled(
             widget.config.features.enabled(Feature::VoiceTranscription),
         );
@@ -3210,9 +3204,6 @@ impl ChatWidget {
         };
 
         widget.prefetch_rate_limits();
-        widget
-            .bottom_pane
-            .set_steer_enabled(widget.config.features.enabled(Feature::Steer));
         widget.bottom_pane.set_voice_transcription_enabled(
             widget.config.features.enabled(Feature::VoiceTranscription),
         );
@@ -3345,7 +3336,7 @@ impl ChatWidget {
                     else {
                         return;
                     };
-                    // Steer submissions during active final-answer streaming can race with turn
+                    // Submissions during active final-answer streaming can race with turn
                     // completion and strand the UI in a running state. Queue those inputs instead
                     // of injecting immediately; `on_task_complete()` drains this FIFO via
                     // `maybe_send_next_queued_input()`, so no typed prompt is dropped.
@@ -3353,7 +3344,7 @@ impl ChatWidget {
                         && !self.is_plan_streaming_in_tui()
                         && self.stream_controller.is_none();
                     if should_submit_now {
-                        // Submitted is only emitted when steer is enabled.
+                        // Submitted is emitted when user submits.
                         // Reset any reasoning header only when we are actually submitting a turn.
                         self.reasoning_buffer.clear();
                         self.full_reasoning_buffer.clear();
@@ -6518,9 +6509,6 @@ impl ChatWidget {
             self.config.features.enable(feature);
         } else {
             self.config.features.disable(feature);
-        }
-        if feature == Feature::Steer {
-            self.bottom_pane.set_steer_enabled(enabled);
         }
         if feature == Feature::VoiceTranscription {
             self.bottom_pane.set_voice_transcription_enabled(enabled);
