@@ -153,10 +153,7 @@ mod spawn {
             .await
             .map_err(FunctionCallError::RespondToModel)?;
         config.model = Some(turn.model_info.slug.clone());
-        config.model_provider_id = turn.config.model_provider_id.clone();
-        config.model_provider = turn.provider.clone();
         config.model_reasoning_effort = turn.reasoning_effort;
-        config.model_reasoning_summary = turn.reasoning_summary;
         apply_spawn_agent_runtime_overrides(&mut config, turn.as_ref())?;
         apply_spawn_agent_overrides(&mut config, child_depth);
 
