@@ -117,8 +117,8 @@ codex-shell-command = { path = "shell-command" }
 codex-shell-escalation = { path = "shell-escalation" }
 codex-skills = { path = "skills" }
 codex-state = { path = "state" }
-codex-test-macros = { path = "test-macros" }
 codex-stdio-to-uds = { path = "stdio-to-uds" }
+codex-test-macros = { path = "test-macros" }
 codex-tui = { path = "tui" }
 codex-utils-absolute-path = { path = "utils/absolute-path" }
 codex-utils-approval-presets = { path = "utils/approval-presets" }
@@ -136,8 +136,8 @@ codex-utils-readiness = { path = "utils/readiness" }
 codex-utils-rustls-provider = { path = "utils/rustls-provider" }
 codex-utils-sandbox-summary = { path = "utils/sandbox-summary" }
 codex-utils-sleep-inhibitor = { path = "utils/sleep-inhibitor" }
-codex-utils-string = { path = "utils/string" }
 codex-utils-stream-parser = { path = "utils/stream-parser" }
+codex-utils-string = { path = "utils/string" }
 codex-windows-sandbox = { path = "windows-sandbox-rs" }
 core_test_support = { path = "core/tests/common" }
 mcp_test_support = { path = "mcp-server/tests/common" }
@@ -164,8 +164,8 @@ clap = "*"
 clap_complete = "*"
 color-eyre = "*"
 crossbeam-channel = "*"
-csv = "*"
 crossterm = "0.28.1"
+csv = "*"
 ctor = "*"
 derive_more = "*"
 diffy = "*"
@@ -177,8 +177,8 @@ env-flags = "*"
 env_logger = "*"
 eventsource-stream = "*"
 futures = { version = "*", default-features = false }
-globset = "*"
 gethostname = "*"
+globset = "*"
 http = "*"
 icu_decimal = "*"
 icu_locale_core = "*"
@@ -254,6 +254,7 @@ starlark = "*"
 strum = "*"
 strum_macros = "*"
 supports-color = "*"
+syntect = "*"
 sys-locale = "*"
 tempfile = "*"
 test-log = "*"
@@ -278,7 +279,6 @@ tracing-subscriber = "*"
 tracing-test = "*"
 tree-sitter = "*"
 tree-sitter-bash = "*"
-syntect = "*"
 ts-rs = "*"
 tungstenite = { version = "0.27.0", features = ["deflate", "proxy"] }
 uds_windows = "*"
