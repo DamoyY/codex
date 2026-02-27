@@ -185,6 +185,7 @@ icu_locale_core = "*"
 icu_provider = { version = "*", features = ["sync"] }
 ignore = "*"
 image = { version = "*", default-features = false }
+iana-time-zone = "*"
 include_dir = "*"
 indexmap = "*"
 insta = "*"
