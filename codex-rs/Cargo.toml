@@ -63,6 +63,8 @@ members = [
     "state",
     "codex-experimental-api-macros",
     "test-macros",
+    "package-manager",
+    "artifacts",
 ]
 resolver = "2"
 
@@ -80,6 +82,8 @@ license = "Apache-2.0"
 app_test_support = { path = "app-server/tests/common" }
 codex-ansi-escape = { path = "ansi-escape" }
 codex-api = { path = "codex-api" }
+codex-artifacts = { path = "artifacts" }
+codex-package-manager = { path = "package-manager" }
 codex-app-server = { path = "app-server" }
 codex-app-server-protocol = { path = "app-server-protocol" }
 codex-app-server-test-client = { path = "app-server-test-client" }
@@ -176,6 +180,7 @@ encoding_rs = "*"
 env-flags = "*"
 env_logger = "*"
 eventsource-stream = "*"
+flate2 = "*"
 futures = { version = "*", default-features = false }
 gethostname = "*"
 globset = "*"
@@ -258,6 +263,7 @@ supports-color = "*"
 syntect = "*"
 sys-locale = "*"
 tempfile = "*"
+tar = "*"
 test-log = "*"
 textwrap = "*"
 thiserror = "*"
@@ -310,7 +316,7 @@ ignored = [
     "icu_provider",
     "openssl-sys",
     "codex-utils-readiness",
-    "codex-secrets",
+    "codex-secrets"
 ]
 
 [profile.ci-test]
