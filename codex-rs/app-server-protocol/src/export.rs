@@ -118,7 +118,7 @@ pub fn generate_ts_with_options(
     ServerRequest::export_all(&cfg)?;
     export_server_responses(out_dir)?;
     ServerNotification::export_all(&cfg)?;
-    EventMsg::export_all_to(out_dir)?;
+    EventMsg::export_all(&cfg)?;
 
     if !options.experimental_api {
         filter_experimental_ts(out_dir)?;
