@@ -708,7 +708,7 @@ pub const FEATURES: &[FeatureSpec] = &[
     FeatureSpec {
         id: Feature::FastMode,
         key: "fast_mode",
-        stage: Stage::UnderDevelopment,
+        stage: Stage::Stable,
         default_enabled: true,
     },
     FeatureSpec {
