@@ -153,7 +153,7 @@ fn extract_zip_archive(archive_path: &Path, destination: &Path) -> Result<(), Pa
 
 #[cfg(unix)]
 fn apply_zip_permissions(
-    entry: &zip::read::ZipFile<'_>,
+    entry: &zip::read::ZipFile<'_, File>,
     output_path: &Path,
 ) -> Result<(), PackageManagerError> {
     let Some(mode) = entry.unix_mode() else {
@@ -169,7 +169,7 @@ fn apply_zip_permissions(
 
 #[cfg(not(unix))]
 fn apply_zip_permissions(
-    _entry: &zip::read::ZipFile<'_>,
+    _entry: &zip::read::ZipFile<'_, File>,
     _output_path: &Path,
 ) -> Result<(), PackageManagerError> {
     Ok(())

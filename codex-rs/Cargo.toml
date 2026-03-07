@@ -303,7 +303,7 @@ walkdir = "*"
 webbrowser = "*"
 which = "*"
 wildmatch = "*"
-zip = "6"
+zip = "*"
 zstd = "*"
 
 wiremock = "*"
