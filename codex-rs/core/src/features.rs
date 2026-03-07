@@ -706,7 +706,7 @@ pub const FEATURES: &[FeatureSpec] = &[
             menu_description: "Let a guardian subagent review `on-request` approval prompts instead of showing them to you, including sandbox escapes and blocked network access.",
             announcement: "",
         },
-        default_enabled: false,
+        default_enabled: true,
     },
     FeatureSpec {
         id: Feature::CollaborationModes,
