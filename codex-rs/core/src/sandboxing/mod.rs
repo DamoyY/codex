@@ -14,12 +14,12 @@ use crate::exec::SandboxType;
 use crate::exec::StdoutStream;
 use crate::exec::execute_exec_request;
 use crate::landlock::allow_network_for_proxy;
-use crate::landlock::create_linux_sandbox_command_args;
+use crate::landlock::create_linux_sandbox_command_args_for_policies;
 use crate::protocol::SandboxPolicy;
 #[cfg(target_os = "macos")]
 use crate::seatbelt::MACOS_PATH_TO_SEATBELT_EXECUTABLE;
 #[cfg(target_os = "macos")]
-use crate::seatbelt::create_seatbelt_command_args_with_extensions;
+use crate::seatbelt::create_seatbelt_command_args_for_policies_with_extensions;
 #[cfg(target_os = "macos")]
 use crate::spawn::CODEX_SANDBOX_ENV_VAR;
 use crate::spawn::CODEX_SANDBOX_NETWORK_DISABLED_ENV_VAR;
@@ -496,9 +496,10 @@ impl SandboxManager {
             SandboxType::MacosSeatbelt => {
                 let mut seatbelt_env = HashMap::new();
                 seatbelt_env.insert(CODEX_SANDBOX_ENV_VAR.to_string(), "seatbelt".to_string());
-                let mut args = create_seatbelt_command_args_with_extensions(
+                let mut args = create_seatbelt_command_args_for_policies_with_extensions(
                     command.clone(),
-                    &effective_policy,
+                    &effective_file_system_policy,
+                    effective_network_policy,
                     sandbox_policy_cwd,
                     enforce_managed_network,
                     network,
@@ -515,9 +516,11 @@ impl SandboxManager {
                 let exe = codex_linux_sandbox_exe
                     .ok_or(SandboxTransformError::MissingLinuxSandboxExecutable)?;
                 let allow_proxy_network = allow_network_for_proxy(enforce_managed_network);
-                let mut args = create_linux_sandbox_command_args(
+                let mut args = create_linux_sandbox_command_args_for_policies(
                     command.clone(),
                     &effective_policy,
+                    &effective_file_system_policy,
+                    effective_network_policy,
                     sandbox_policy_cwd,
                     use_linux_sandbox_bwrap,
                     allow_proxy_network,
