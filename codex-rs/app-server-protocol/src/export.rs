@@ -2265,27 +2265,28 @@ mod tests {
 
     #[test]
     fn generate_ts_with_experimental_api_retains_experimental_entries() -> Result<()> {
-        let client_request_ts = ClientRequest::export_to_string()?;
+        let cfg = ts_rs::Config::new();
+        let client_request_ts = ClientRequest::export_to_string(&cfg)?;
         assert_eq!(client_request_ts.contains("mock/experimentalMethod"), true);
         assert_eq!(
             client_request_ts.contains("MockExperimentalMethodParams"),
             true
         );
         assert_eq!(
-            v2::MockExperimentalMethodParams::export_to_string()?
+            v2::MockExperimentalMethodParams::export_to_string(&cfg)?
                 .contains("MockExperimentalMethodParams"),
             true
         );
         assert_eq!(
-            v2::MockExperimentalMethodResponse::export_to_string()?
+            v2::MockExperimentalMethodResponse::export_to_string(&cfg)?
                 .contains("MockExperimentalMethodResponse"),
             true
         );
 
-        let thread_start_ts = v2::ThreadStartParams::export_to_string()?;
+        let thread_start_ts = v2::ThreadStartParams::export_to_string(&cfg)?;
         assert_eq!(thread_start_ts.contains("mockExperimentalField"), true);
         let command_execution_request_approval_ts =
-            v2::CommandExecutionRequestApprovalParams::export_to_string()?;
+            v2::CommandExecutionRequestApprovalParams::export_to_string(&cfg)?;
         assert_eq!(
             command_execution_request_approval_ts.contains("additionalPermissions"),
             true
