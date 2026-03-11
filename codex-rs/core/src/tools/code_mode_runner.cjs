@@ -1,14 +1,16 @@
-'use strict';
+"use strict";
 
-const readline = require('node:readline');
-const vm = require('node:vm');
+const readline = require("node:readline");
+const vm = require("node:vm");
 
 const { SourceTextModule, SyntheticModule } = vm;
 const DEFAULT_MAX_OUTPUT_TOKENS_PER_EXEC_CALL = 10000;
 
 function normalizeMaxOutputTokensPerExecCall(value) {
   if (!Number.isSafeInteger(value) || value < 0) {
-    throw new TypeError('max_output_tokens_per_exec_call must be a non-negative safe integer');
+    throw new TypeError(
+      "max_output_tokens_per_exec_call must be a non-negative safe integer",
+    );
   }
   return value;
 }
@@ -28,7 +30,7 @@ function createProtocol() {
     initReject = reject;
   });
 
-  rl.on('line', (line) => {
+  rl.on("line", (line) => {
     if (!line.trim()) {
       return;
     }
@@ -41,26 +43,26 @@ function createProtocol() {
       return;
     }
 
-    if (message.type === 'init') {
+    if (message.type === "init") {
       initResolve(message);
       return;
     }
 
-    if (message.type === 'response') {
+    if (message.type === "response") {
       const entry = pending.get(message.id);
       if (!entry) {
         return;
       }
       pending.delete(message.id);
-      entry.resolve(message.code_mode_result ?? '');
+      entry.resolve(message.code_mode_result ?? "");
       return;
     }
 
     initReject(new Error(`Unknown protocol message type: ${message.type}`));
   });
 
-  rl.on('close', () => {
-    const error = new Error('stdin closed');
+  rl.on("close", () => {
+    const error = new Error("stdin closed");
     initReject(error);
     for (const entry of pending.values()) {
       entry.reject(error);
@@ -96,7 +98,10 @@ function createProtocol() {
 
 function readContentItems(context) {
   try {
-    const serialized = vm.runInContext('JSON.stringify(globalThis.__codexContentItems ?? [])', context);
+    const serialized = vm.runInContext(
+      "JSON.stringify(globalThis.__codexContentItems ?? [])",
+      context,
+    );
     const contentItems = JSON.parse(serialized);
     return Array.isArray(contentItems) ? contentItems : [];
   } catch {
@@ -108,17 +113,13 @@ function formatErrorText(error) {
   return String(error && error.stack ? error.stack : error);
 }
 
-function isValidIdentifier(name) {
-  return /^[A-Za-z_$][0-9A-Za-z_$]*$/.test(name);
-}
-
 function cloneJsonValue(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
 function createToolCaller(protocol) {
   return (name, input) =>
-    protocol.request('tool_call', {
+    protocol.request("tool_call", {
       name: String(name),
       input,
     });
@@ -139,12 +140,25 @@ function createToolsNamespace(callTool, enabledTools) {
   return Object.freeze(tools);
 }
 
+function createAllToolsMetadata(enabledTools) {
+  return Object.freeze(
+    enabledTools.map(({ module: modulePath, name, description }) =>
+      Object.freeze({
+        module: modulePath,
+        name,
+        description,
+      }),
+    ),
+  );
+}
+
 function createToolsModule(context, callTool, enabledTools) {
   const tools = createToolsNamespace(callTool, enabledTools);
-  const exportNames = ['tools'];
+  const allTools = createAllToolsMetadata(enabledTools);
+  const exportNames = ["ALL_TOOLS"];
 
   for (const { tool_name } of enabledTools) {
-    if (tool_name !== 'tools' && isValidIdentifier(tool_name)) {
+    if (tool_name !== "ALL_TOOLS") {
       exportNames.push(tool_name);
     }
   }
@@ -154,14 +168,14 @@ function createToolsModule(context, callTool, enabledTools) {
   return new SyntheticModule(
     uniqueExportNames,
     function initToolsModule() {
-      this.setExport('tools', tools);
+      this.setExport("ALL_TOOLS", allTools);
       for (const exportName of uniqueExportNames) {
-        if (exportName !== 'tools') {
+        if (exportName !== "ALL_TOOLS") {
           this.setExport(exportName, tools[exportName]);
         }
       }
     },
-    { context }
+    { context },
   );
 }
 
@@ -173,21 +187,21 @@ function ensureContentItems(context) {
 }
 
 function serializeOutputText(value) {
-  if (typeof value === 'string') {
+  if (typeof value === "string") {
     return value;
   }
   if (
-    typeof value === 'undefined' ||
+    typeof value === "undefined" ||
     value === null ||
-    typeof value === 'boolean' ||
-    typeof value === 'number' ||
-    typeof value === 'bigint'
+    typeof value === "boolean" ||
+    typeof value === "number" ||
+    typeof value === "bigint"
   ) {
     return String(value);
   }
 
   const serialized = JSON.stringify(value);
-  if (typeof serialized === 'string') {
+  if (typeof serialized === "string") {
     return serialized;
   }
 
@@ -195,19 +209,19 @@ function serializeOutputText(value) {
 }
 
 function normalizeOutputImageUrl(value) {
-  if (typeof value !== 'string' || !value) {
-    throw new TypeError('output_image expects a non-empty image URL string');
+  if (typeof value !== "string" || !value) {
+    throw new TypeError("output_image expects a non-empty image URL string");
   }
   if (/^(?:https?:\/\/|data:)/i.test(value)) {
     return value;
   }
-  throw new TypeError('output_image expects an http(s) or data URL');
+  throw new TypeError("output_image expects an http(s) or data URL");
 }
 
 function createCodeModeModule(context, state) {
   const load = (key) => {
-    if (typeof key !== 'string') {
-      throw new TypeError('load key must be a string');
+    if (typeof key !== "string") {
+      throw new TypeError("load key must be a string");
     }
     if (!Object.prototype.hasOwnProperty.call(state.storedValues, key)) {
       return undefined;
@@ -215,14 +229,14 @@ function createCodeModeModule(context, state) {
     return cloneJsonValue(state.storedValues[key]);
   };
   const store = (key, value) => {
-    if (typeof key !== 'string') {
-      throw new TypeError('store key must be a string');
+    if (typeof key !== "string") {
+      throw new TypeError("store key must be a string");
     }
     state.storedValues[key] = cloneJsonValue(value);
   };
   const outputText = (value) => {
     const item = {
-      type: 'input_text',
+      type: "input_text",
       text: serializeOutputText(value),
     };
     ensureContentItems(context).push(item);
@@ -230,7 +244,7 @@ function createCodeModeModule(context, state) {
   };
   const outputImage = (value) => {
     const item = {
-      type: 'input_image',
+      type: "input_image",
       image_url: normalizeOutputImageUrl(value),
     };
     ensureContentItems(context).push(item);
@@ -238,19 +252,25 @@ function createCodeModeModule(context, state) {
   };
 
   return new SyntheticModule(
-    ['load', 'output_text', 'output_image', 'set_max_output_tokens_per_exec_call', 'store'],
+    [
+      "load",
+      "output_text",
+      "output_image",
+      "set_max_output_tokens_per_exec_call",
+      "store",
+    ],
     function initCodeModeModule() {
-      this.setExport('load', load);
-      this.setExport('output_text', outputText);
-      this.setExport('output_image', outputImage);
-      this.setExport('set_max_output_tokens_per_exec_call', (value) => {
+      this.setExport("load", load);
+      this.setExport("output_text", outputText);
+      this.setExport("output_image", outputImage);
+      this.setExport("set_max_output_tokens_per_exec_call", (value) => {
         const normalized = normalizeMaxOutputTokensPerExecCall(value);
         state.maxOutputTokensPerExecCall = normalized;
         return normalized;
       });
-      this.setExport('store', store);
+      this.setExport("store", store);
     },
-    { context }
+    { context },
   );
 }
 
@@ -281,12 +301,21 @@ function createNamespacedToolsNamespace(callTool, enabledTools, namespace) {
   return Object.freeze(tools);
 }
 
-function createNamespacedToolsModule(context, callTool, enabledTools, namespace) {
-  const tools = createNamespacedToolsNamespace(callTool, enabledTools, namespace);
-  const exportNames = ['tools'];
+function createNamespacedToolsModule(
+  context,
+  callTool,
+  enabledTools,
+  namespace,
+) {
+  const tools = createNamespacedToolsNamespace(
+    callTool,
+    enabledTools,
+    namespace,
+  );
+  const exportNames = [];
 
   for (const exportName of Object.keys(tools)) {
-    if (exportName !== 'tools' && isValidIdentifier(exportName)) {
+    if (exportName !== "ALL_TOOLS") {
       exportNames.push(exportName);
     }
   }
@@ -296,14 +325,11 @@ function createNamespacedToolsModule(context, callTool, enabledTools, namespace)
   return new SyntheticModule(
     uniqueExportNames,
     function initNamespacedToolsModule() {
-      this.setExport('tools', tools);
       for (const exportName of uniqueExportNames) {
-        if (exportName !== 'tools') {
-          this.setExport(exportName, tools[exportName]);
-        }
+        this.setExport(exportName, tools[exportName]);
       }
     },
-    { context }
+    { context },
   );
 }
 
@@ -313,10 +339,10 @@ function createModuleResolver(context, callTool, enabledTools, state) {
   const namespacedModules = new Map();
 
   return function resolveModule(specifier) {
-    if (specifier === 'tools.js') {
+    if (specifier === "tools.js") {
       return toolsModule;
     }
-    if (specifier === '@openai/code_mode' || specifier === 'openai/code_mode') {
+    if (specifier === "@openai/code_mode" || specifier === "openai/code_mode") {
       return codeModeModule;
     }
     const namespacedMatch = /^tools\/(.+)\.js$/.exec(specifier);
@@ -325,17 +351,17 @@ function createModuleResolver(context, callTool, enabledTools, state) {
     }
 
     const namespace = namespacedMatch[1]
-      .split('/')
+      .split("/")
       .filter((segment) => segment.length > 0);
     if (namespace.length === 0) {
       throw new Error(`Unsupported import in exec: ${specifier}`);
     }
 
-    const cacheKey = namespace.join('/');
+    const cacheKey = namespace.join("/");
     if (!namespacedModules.has(cacheKey)) {
       namespacedModules.set(
         cacheKey,
-        createNamespacedToolsModule(context, callTool, enabledTools, namespace)
+        createNamespacedToolsModule(context, callTool, enabledTools, namespace),
       );
     }
     return namespacedModules.get(cacheKey);
@@ -347,11 +373,11 @@ async function runModule(context, request, state, callTool) {
     context,
     callTool,
     request.enabled_tools ?? [],
-    state
+    state,
   );
   const mainModule = new SourceTextModule(request.source, {
     context,
-    identifier: 'exec_main.mjs',
+    identifier: "exec_main.mjs",
     importModuleDynamically: async (specifier) => resolveModule(specifier),
   });
 
@@ -375,7 +401,7 @@ async function main() {
   try {
     await runModule(context, request, state, callTool);
     await protocol.send({
-      type: 'result',
+      type: "result",
       content_items: readContentItems(context),
       stored_values: state.storedValues,
       max_output_tokens_per_exec_call: state.maxOutputTokensPerExecCall,
@@ -383,7 +409,7 @@ async function main() {
     process.exit(0);
   } catch (error) {
     await protocol.send({
-      type: 'result',
+      type: "result",
       content_items: readContentItems(context),
       stored_values: state.storedValues,
       error_text: formatErrorText(error),
