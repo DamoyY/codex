@@ -1,0 +1,25 @@
+[tool.pyright]
+typeCheckingMode = "basic"
+
+[tool.ruff]
+lint.select = ["ALL"]
+lint.ignore = [
+    "C901",
+    "D100",
+    "D101",
+    "D102",
+    "D103",
+    "D104",
+    "D105",
+    "D107",
+    "D203",
+    "D212",
+    "E501",
+    "RUF001",
+    "PLR0912",
+    "PLR0913",
+    "PLR0915",
+    "PLR2004",
+    "T201",
+]
+extend-exclude = ["benchmark/MILO"]
