@@ -2,6 +2,7 @@ use crate::default_client::build_reqwest_client;
 use reqwest::Client;
 use serde::Deserialize;
 use std::fs;
+use std::fs::File;
 use std::io::Cursor;
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
@@ -331,7 +332,7 @@ fn extract_zipball_to_dir(bytes: &[u8], destination: &Path) -> Result<(), String
 }
 
 #[cfg(unix)]
-fn apply_zip_permissions(entry: &zip::read::ZipFile<'_>, output_path: &Path) -> Result<(), String> {
+fn apply_zip_permissions(entry: &zip::read::ZipFile<'_, File>, output_path: &Path) -> Result<(), String> {
     let Some(mode) = entry.unix_mode() else {
         return Ok(());
     };
@@ -345,7 +346,7 @@ fn apply_zip_permissions(entry: &zip::read::ZipFile<'_>, output_path: &Path) -> 
 
 #[cfg(not(unix))]
 fn apply_zip_permissions(
-    _entry: &zip::read::ZipFile<'_>,
+    _entry: &zip::read::ZipFile<'_, File>,
     _output_path: &Path,
 ) -> Result<(), String> {
     Ok(())
