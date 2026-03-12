@@ -2190,12 +2190,13 @@ pub(crate) fn build_specs(
         builder.register_handler("read_mcp_resource", mcp_resource_handler);
     }
 
-    push_tool_spec(
-        &mut builder,
-        PLAN_TOOL.clone(),
-        false,
-        config.code_mode_enabled,
-    );
+    // Do not add update_plan to the tool list.
+    // push_tool_spec(
+    //     &mut builder,
+    //     PLAN_TOOL.clone(),
+    //     false,
+    //     config.code_mode_enabled,
+    // );
     builder.register_handler("update_plan", plan_handler);
 
     if config.js_repl_enabled {
