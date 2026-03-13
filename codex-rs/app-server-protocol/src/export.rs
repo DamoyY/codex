@@ -17,7 +17,6 @@ use crate::protocol::common::EXPERIMENTAL_CLIENT_METHODS;
 use anyhow::Context;
 use anyhow::Result;
 use anyhow::anyhow;
-use codex_protocol::protocol::EventMsg;
 use schemars::JsonSchema;
 use schemars::schema_for;
 use serde::Serialize;
@@ -42,11 +41,10 @@ const JSON_V1_ALLOWLIST: &[&str] = &["InitializeParams", "InitializeResponse"];
 const SPECIAL_DEFINITIONS: &[&str] = &[
     "ClientNotification",
     "ClientRequest",
-    "EventMsg",
     "ServerNotification",
     "ServerRequest",
 ];
-const FLAT_V2_SHARED_DEFINITIONS: &[&str] = &["ClientRequest", "EventMsg", "ServerNotification"];
+const FLAT_V2_SHARED_DEFINITIONS: &[&str] = &["ClientRequest", "ServerNotification"];
 const V1_CLIENT_REQUEST_METHODS: &[&str] =
     &["getConversationSummary", "gitDiffToRemote", "getAuthStatus"];
 const EXCLUDED_SERVER_NOTIFICATION_METHODS_FOR_JSON: &[&str] = &["rawResponseItem/completed"];
@@ -120,7 +118,6 @@ pub fn generate_ts_with_options(
     ServerRequest::export_all(&cfg)?;
     export_server_responses(out_dir)?;
     ServerNotification::export_all(&cfg)?;
-    EventMsg::export_all(&cfg)?;
 
     if !options.experimental_api {
         filter_experimental_ts(out_dir)?;
@@ -203,7 +200,6 @@ pub fn generate_json_with_experimental(out_dir: &Path, experimental_api: bool) -
         |d| write_json_schema_with_return::<crate::ServerRequest>(d, "ServerRequest"),
         |d| write_json_schema_with_return::<crate::ClientNotification>(d, "ClientNotification"),
         |d| write_json_schema_with_return::<crate::ServerNotification>(d, "ServerNotification"),
-        |d| write_json_schema_with_return::<EventMsg>(d, "EventMsg"),
     ];
 
     let mut schemas: Vec<GeneratedSchema> = Vec::new();
@@ -1027,8 +1023,8 @@ fn build_schema_bundle(schemas: Vec<GeneratedSchema>) -> Result<Value> {
 /// Build a datamodel-code-generator-friendly v2 bundle from the mixed export.
 ///
 /// The full bundle keeps v2 schemas nested under `definitions.v2`, plus a few
-/// shared root definitions like `ClientRequest`, `EventMsg`, and
-/// `ServerNotification`. Python codegen only walks one definitions map level, so
+/// shared root definitions like `ClientRequest` and `ServerNotification`.
+/// Python codegen only walks one definitions map level, so
 /// a direct feed would treat `v2` itself as a schema and miss unreferenced v2
 /// leaves. This helper flattens all v2 definitions to the root definitions map,
 /// then pulls in the shared root schemas and any non-v2 transitive deps they
@@ -2009,6 +2005,7 @@ fn index_ts_entries(paths: &[&Path], has_v2_ts: bool) -> String {
             let stem = path.file_stem()?.to_string_lossy().into_owned();
             if stem == "index" { None } else { Some(stem) }
         })
+        .filter(|stem| stem != "EventMsg")
         .collect();
     stems.sort();
     stems.dedup();
@@ -2051,7 +2048,12 @@ mod tests {
             client_request_ts.contains("MockExperimentalMethodParams"),
             false
         );
-        assert_eq!(fixture_tree.contains_key(Path::new("EventMsg.ts")), true);
+        let typescript_index = std::str::from_utf8(
+            fixture_tree
+                .get(Path::new("index.ts"))
+                .ok_or_else(|| anyhow::anyhow!("missing index.ts fixture"))?,
+        )?;
+        assert_eq!(typescript_index.contains("export type { EventMsg }"), false);
         let thread_start_ts = std::str::from_utf8(
             fixture_tree
                 .get(Path::new("v2/ThreadStartParams.ts"))
@@ -2532,7 +2534,6 @@ mod tests {
         assert_eq!(definitions.contains_key("v2"), false);
         assert_eq!(definitions.contains_key("ThreadStartParams"), true);
         assert_eq!(definitions.contains_key("ThreadStartResponse"), true);
-        assert_eq!(definitions.contains_key("ThreadStartedEventMsg"), true);
         assert_eq!(definitions.contains_key("ThreadStartedNotification"), true);
         assert_eq!(definitions.contains_key("SharedHelper"), true);
         assert_eq!(definitions.contains_key("SharedLeaf"), true);
@@ -2559,22 +2560,6 @@ mod tests {
                 "LogoutRequest".to_string(),
                 "StartRequest".to_string(),
             ])
-        );
-        let event_titles: BTreeSet<String> = definitions["EventMsg"]["oneOf"]
-            .as_array()
-            .expect("EventMsg should remain a oneOf")
-            .iter()
-            .map(|variant| {
-                variant
-                    .get("title")
-                    .and_then(Value::as_str)
-                    .unwrap_or_default()
-                    .to_string()
-            })
-            .collect();
-        assert_eq!(
-            event_titles,
-            BTreeSet::from(["".to_string(), "WarningEventMsg".to_string(),])
         );
         let notification_titles: BTreeSet<String> = definitions["ServerNotification"]["oneOf"]
             .as_array()
@@ -2725,6 +2710,7 @@ export type Config = { stableField: Keep, unstableField: string | null } & ({ [k
             client_request_json.contains("mock/experimentalMethod"),
             false
         );
+        assert_eq!(output_dir.join("EventMsg.json").exists(), false);
 
         let bundle_json =
             fs::read_to_string(output_dir.join("codex_app_server_protocol.schemas.json"))?;
@@ -2807,29 +2793,7 @@ export type Config = { stableField: Keep, unstableField: string | null } & ({ [k
         .map(str::to_string)
         .collect();
         assert_eq!(missing_server_notification_methods, Vec::<String>::new());
-        let event_types: BTreeSet<String> = definitions["EventMsg"]["oneOf"]
-            .as_array()
-            .expect("flat v2 EventMsg should remain a oneOf")
-            .iter()
-            .filter_map(|variant| {
-                variant["properties"]["type"]["enum"]
-                    .as_array()
-                    .and_then(|values| values.first())
-                    .and_then(Value::as_str)
-                    .map(str::to_string)
-            })
-            .collect();
-        let missing_event_types: Vec<String> = [
-            "agent_message_delta",
-            "task_complete",
-            "warning",
-            "web_search_begin",
-        ]
-        .into_iter()
-        .filter(|event_type| !event_types.contains(*event_type))
-        .map(str::to_string)
-        .collect();
-        assert_eq!(missing_event_types, Vec::<String>::new());
+        assert_eq!(definitions.contains_key("EventMsg"), false);
         assert_eq!(
             output_dir
                 .join("v2")

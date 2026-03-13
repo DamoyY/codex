@@ -239,6 +239,8 @@ rustls = { version = "*", default-features = false, features = [
     "ring",
     "std",
 ] }
+rustls-native-certs = "*"
+rustls-pki-types = "*"
 schemars = "0.8"
 seccompiler = "*"
 semver = "*"

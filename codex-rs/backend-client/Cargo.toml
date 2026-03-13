@@ -14,6 +14,7 @@ serde = { version = "*", features = ["derive"] }
 serde_json = "*"
 reqwest = { version = "*", default-features = false, features = ["json", "rustls-tls"] }
 codex-backend-openapi-models = { path = "../codex-backend-openapi-models" }
+codex-client = { workspace = true }
 codex-protocol = { workspace = true }
 codex-core = { workspace = true }
 
