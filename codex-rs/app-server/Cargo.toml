@@ -69,6 +69,7 @@ tracing = { workspace = true, features = ["log"] }
 tracing-subscriber = { workspace = true, features = ["env-filter", "fmt", "json"] }
 uuid = { workspace = true, features = ["serde", "v7"] }
 rustls = { version = "*", features = ["ring"] }
+walkdir = { workspace = true }
 
 [dev-dependencies]
 app_test_support = { workspace = true }
