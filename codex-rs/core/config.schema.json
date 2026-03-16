@@ -338,9 +338,6 @@
             "apps": {
               "type": "boolean"
             },
-            "apps_mcp_gateway": {
-              "type": "boolean"
-            },
             "artifact": {
               "type": "boolean"
             },
@@ -396,6 +393,9 @@
               "type": "boolean"
             },
             "fast_mode": {
+              "type": "boolean"
+            },
+            "guardian_approval": {
               "type": "boolean"
             },
             "image_detail_original": {
@@ -474,9 +474,6 @@
               "type": "boolean"
             },
             "skill_mcp_dependency_install": {
-              "type": "boolean"
-            },
-            "smart_approvals": {
               "type": "boolean"
             },
             "sqlite": {
@@ -1890,9 +1887,6 @@
         "apps": {
           "type": "boolean"
         },
-        "apps_mcp_gateway": {
-          "type": "boolean"
-        },
         "artifact": {
           "type": "boolean"
         },
@@ -1948,6 +1942,9 @@
           "type": "boolean"
         },
         "fast_mode": {
+          "type": "boolean"
+        },
+        "guardian_approval": {
           "type": "boolean"
         },
         "image_detail_original": {
@@ -2026,9 +2023,6 @@
           "type": "boolean"
         },
         "skill_mcp_dependency_install": {
-          "type": "boolean"
-        },
-        "smart_approvals": {
           "type": "boolean"
         },
         "sqlite": {
