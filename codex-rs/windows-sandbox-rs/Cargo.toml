@@ -24,12 +24,14 @@ chrono = { version = "*", default-features = false, features = [
     "clock",
     "std",
 ] }
+codex-utils-pty = { workspace = true }
 codex-utils-absolute-path = { workspace = true }
 codex-utils-string = { workspace = true }
 dunce = "*"
 serde = { version = "*", features = ["derive"] }
 serde_json = "*"
 tempfile = "*"
+tokio = { workspace = true, features = ["sync", "rt"] }
 windows = { version = "*", features = [
     "Win32_Foundation",
     "Win32_NetworkManagement_WindowsFirewall",
@@ -86,3 +88,6 @@ pretty_assertions = { workspace = true }
 
 [build-dependencies]
 winres = "*"
+
+[package.metadata.cargo-shear]
+ignored = ["codex-utils-pty", "tokio"]
