@@ -233,7 +233,7 @@ pretty_assertions = "*"
 pulldown-cmark = "0.10"
 rand = "0.9"
 ratatui = "0.29.0"
-ratatui-macros = "*"
+ratatui-macros = "0.6"
 regex = "*"
 regex-lite = "*"
 reqwest = { version = "*", features = ["json", "rustls-tls"] }
