@@ -10,8 +10,8 @@ use codex_core::auth::AuthCredentialsStoreMode;
 use codex_core::built_in_model_providers;
 use codex_core::default_client::originator;
 use codex_core::error::CodexErr;
-use codex_core::features::Feature;
 use codex_core::models_manager::collaboration_mode_presets::CollaborationModesConfig;
+use codex_features::Feature;
 use codex_otel::SessionTelemetry;
 use codex_otel::TelemetryAuthMode;
 use codex_protocol::ThreadId;
@@ -389,6 +389,7 @@ async fn resume_replays_legacy_js_repl_image_rollout_shapes() {
             timestamp: "2024-01-01T00:00:02.000Z".to_string(),
             item: RolloutItem::ResponseItem(ResponseItem::CustomToolCallOutput {
                 call_id: "legacy-js-call".to_string(),
+                name: None,
                 output: FunctionCallOutputPayload::from_text("legacy js_repl stdout".to_string()),
             }),
         },
@@ -546,6 +547,7 @@ async fn resume_replays_image_tool_outputs_with_detail() {
             timestamp: "2024-01-01T00:00:02.500Z".to_string(),
             item: RolloutItem::ResponseItem(ResponseItem::CustomToolCallOutput {
                 call_id: custom_call_id.to_string(),
+                name: None,
                 output: FunctionCallOutputPayload::from_content_items(vec![
                     FunctionCallOutputContentItem::InputImage {
                         image_url: image_url.to_string(),
@@ -1898,6 +1900,7 @@ async fn azure_responses_request_includes_store_and_reasoning_ids() {
     });
     prompt.input.push(ResponseItem::CustomToolCallOutput {
         call_id: "custom-tool-call-id".into(),
+        name: None,
         output: FunctionCallOutputPayload::from_text("ok".into()),
     });
 
