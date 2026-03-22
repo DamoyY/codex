@@ -2608,7 +2608,7 @@ pub(crate) fn build_specs_with_discoverable_tools(
 
     let shell_handler = Arc::new(ShellHandler);
     let unified_exec_handler = Arc::new(UnifiedExecHandler);
-    let plan_handler = Arc::new(PlanHandler);
+    // let plan_handler = Arc::new(PlanHandler);
     let apply_patch_handler = Arc::new(ApplyPatchHandler);
     let dynamic_tool_handler = Arc::new(DynamicToolHandler);
     let view_image_handler = Arc::new(ViewImageHandler);
@@ -2752,13 +2752,13 @@ pub(crate) fn build_specs_with_discoverable_tools(
         builder.register_handler("read_mcp_resource", mcp_resource_handler);
     }
 
-    push_tool_spec(
-        &mut builder,
-        PLAN_TOOL.clone(),
-        /*supports_parallel_tool_calls*/ false,
-        config.code_mode_enabled,
-    );
-    builder.register_handler("update_plan", plan_handler);
+    // push_tool_spec(
+    //     &mut builder,
+    //     PLAN_TOOL.clone(),
+    //     /*supports_parallel_tool_calls*/ false,
+    //     config.code_mode_enabled,
+    // );
+    // builder.register_handler("update_plan", plan_handler);
 
     if config.js_repl_enabled {
         push_tool_spec(
