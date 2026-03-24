@@ -20,7 +20,7 @@ use std::sync::atomic::Ordering;
 /// This structure is shared by all agents in the same user session (because the `AgentControl`
 /// is).
 #[derive(Default)]
-pub(crate) struct Guards {
+pub(crate) struct AgentRegistry {
     active_agents: Mutex<ActiveAgents>,
     total_count: AtomicUsize,
 }
@@ -38,6 +38,7 @@ pub(crate) struct AgentMetadata {
     pub(crate) agent_path: Option<AgentPath>,
     pub(crate) agent_nickname: Option<String>,
     pub(crate) agent_role: Option<String>,
+    pub(crate) last_task_message: Option<String>,
 }
 
 fn format_agent_nickname(name: &str, nickname_reset_count: usize) -> String {
@@ -75,7 +76,7 @@ pub(crate) fn exceeds_thread_spawn_depth_limit(depth: i32, max_depth: i32) -> bo
     depth > max_depth
 }
 
-impl Guards {
+impl AgentRegistry {
     pub(crate) fn reserve_spawn_slot(
         self: &Arc<Self>,
         max_threads: Option<usize>,
@@ -149,6 +150,34 @@ impl Guards {
             .values()
             .find(|metadata| metadata.agent_id == Some(thread_id))
             .cloned()
+    }
+
+    pub(crate) fn live_agents(&self) -> Vec<AgentMetadata> {
+        self.active_agents
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .agent_tree
+            .values()
+            .filter(|metadata| {
+                metadata.agent_id.is_some()
+                    && !metadata.agent_path.as_ref().is_some_and(AgentPath::is_root)
+            })
+            .cloned()
+            .collect()
+    }
+
+    pub(crate) fn update_last_task_message(&self, thread_id: ThreadId, last_task_message: String) {
+        let mut active_agents = self
+            .active_agents
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        if let Some(metadata) = active_agents
+            .agent_tree
+            .values_mut()
+            .find(|metadata| metadata.agent_id == Some(thread_id))
+        {
+            metadata.last_task_message = Some(last_task_message);
+        }
     }
 
     fn register_spawned_thread(&self, agent_metadata: AgentMetadata) {
@@ -263,7 +292,7 @@ impl Guards {
 }
 
 pub(crate) struct SpawnReservation {
-    state: Arc<Guards>,
+    state: Arc<AgentRegistry>,
     active: bool,
     reserved_agent_nickname: Option<String>,
     reserved_agent_path: Option<AgentPath>,
@@ -311,5 +340,5 @@ impl Drop for SpawnReservation {
 }
 
 #[cfg(test)]
-#[path = "guards_tests.rs"]
+#[path = "registry_tests.rs"]
 mod tests;
