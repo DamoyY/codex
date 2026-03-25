@@ -25,4 +25,4 @@ serde = { version = "*", features = ["derive"] }
 serde_json = "*"
 thiserror = "*"
 codex-backend-client = { path = "../backend-client", optional = true }
-codex-git = { workspace = true }
+codex-git-utils = { workspace = true }
