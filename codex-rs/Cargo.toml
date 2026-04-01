@@ -220,9 +220,9 @@ globset = "*"
 hmac = "0.12"
 http = "*"
 iana-time-zone = "*"
-icu_decimal = "*"
-icu_locale_core = "*"
-icu_provider = { version = "*", features = ["sync"] }
+icu_decimal = "2.1.1"
+icu_locale_core = "2.1.1"
+icu_provider = { version = "2.1.1", features = ["sync"] }
 ignore = "*"
 image = { version = "*", default-features = false }
 include_dir = "*"
