@@ -19,10 +19,6 @@ path = "src/lib.rs"
 
 [features]
 default = ["voice-input"]
-# Enable vt100-based tests (emulator) when running with `--features vt100-tests`.
-vt100-tests = []
-# Gate verbose debug logging inside the TUI implementation.
-debug-logs = []
 voice-input = ["dep:cpal"]
 
 [lints]
@@ -104,7 +100,7 @@ toml = { workspace = true }
 tracing = { workspace = true, features = ["log"] }
 tracing-appender = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter"] }
-syntect = "5"
+syntect = "*"
 two-face = { version = "*", default-features = false, features = ["syntect-default-onig"] }
 unicode-segmentation = { workspace = true }
 unicode-width = { workspace = true }
