@@ -172,9 +172,10 @@ pub(crate) fn build_specs_with_discoverable_tools(
             ToolHandlerKind::McpResource => {
                 builder.register_handler(handler.name, mcp_resource_handler.clone());
             }
-            ToolHandlerKind::Plan => {
-                builder.register_handler(handler.name, plan_handler.clone());
-            }
+            // ToolHandlerKind::Plan => {
+            //     builder.register_handler(handler.name, plan_handler.clone());
+            // }
+            ToolHandlerKind::Plan => {}
             ToolHandlerKind::RequestPermissions => {
                 builder.register_handler(handler.name, request_permissions_handler.clone());
             }

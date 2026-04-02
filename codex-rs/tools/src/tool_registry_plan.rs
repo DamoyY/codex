@@ -182,12 +182,12 @@ pub fn build_tool_registry_plan(
         plan.register_handler("read_mcp_resource", ToolHandlerKind::McpResource);
     }
 
-    plan.push_spec(
-        create_update_plan_tool(),
-        /*supports_parallel_tool_calls*/ false,
-        config.code_mode_enabled,
-    );
-    plan.register_handler("update_plan", ToolHandlerKind::Plan);
+    // plan.push_spec(
+    //     create_update_plan_tool(),
+    //     /*supports_parallel_tool_calls*/ false,
+    //     config.code_mode_enabled,
+    // );
+    // plan.register_handler("update_plan", ToolHandlerKind::Plan);
 
     if config.js_repl_enabled {
         plan.push_spec(
