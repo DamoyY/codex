@@ -11,6 +11,7 @@ path = "src/lib.rs"
 
 [dependencies]
 codex-core = { path = "../core" }
+codex-model-provider-info = { path = "../model-provider-info" }
 reqwest = { version = "*", features = ["json", "stream"] }
 serde_json = "*"
 tokio = { version = "*", features = ["rt"] }

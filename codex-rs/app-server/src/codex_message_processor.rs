@@ -29,6 +29,7 @@ use codex_app_server_protocol::AppsListParams;
 use codex_app_server_protocol::AppsListResponse;
 use codex_app_server_protocol::AskForApproval;
 use codex_app_server_protocol::AuthMode;
+use codex_app_server_protocol::AuthMode as CoreAuthMode;
 use codex_app_server_protocol::CancelLoginAccountParams;
 use codex_app_server_protocol::CancelLoginAccountResponse;
 use codex_app_server_protocol::CancelLoginAccountStatus;
@@ -202,8 +203,6 @@ use codex_core::config_loader::CloudRequirementsLoadErrorCode;
 use codex_core::config_loader::CloudRequirementsLoader;
 use codex_core::config_loader::LoaderOverrides;
 use codex_core::config_loader::load_config_layers_state;
-use codex_core::error::CodexErr;
-use codex_core::error::Result as CodexResult;
 use codex_core::exec::ExecCapturePolicy;
 use codex_core::exec::ExecExpiration;
 use codex_core::exec::ExecParams;
@@ -212,7 +211,6 @@ use codex_core::find_archived_thread_path_by_id_str;
 use codex_core::find_thread_name_by_id;
 use codex_core::find_thread_names_by_ids;
 use codex_core::find_thread_path_by_id_str;
-use codex_core::models_manager::collaboration_mode_presets::CollaborationModesConfig;
 use codex_core::parse_cursor;
 use codex_core::plugins::MarketplaceError;
 use codex_core::plugins::MarketplacePluginSource;
@@ -235,8 +233,8 @@ use codex_features::Feature;
 use codex_features::Stage;
 use codex_feedback::CodexFeedback;
 use codex_git_utils::git_diff_to_remote;
+use codex_git_utils::resolve_root_git_project_for_trust;
 use codex_login::AuthManager;
-use codex_login::AuthMode as CoreAuthMode;
 use codex_login::CLIENT_ID;
 use codex_login::CodexAuth;
 use codex_login::ServerOptions as LoginServerOptions;
@@ -250,13 +248,18 @@ use codex_login::run_login_server;
 use codex_mcp::mcp::auth::discover_supported_scopes;
 use codex_mcp::mcp::auth::resolve_oauth_scopes;
 use codex_mcp::mcp::collect_mcp_snapshot;
-use codex_mcp::mcp::group_tools_by_server;
+use codex_mcp::mcp::effective_mcp_servers;
+use codex_mcp::mcp::qualified_mcp_tool_name_prefix;
+use codex_models_manager::collaboration_mode_presets::CollaborationModesConfig;
 use codex_protocol::ThreadId;
 use codex_protocol::config_types::CollaborationMode;
 use codex_protocol::config_types::ForcedLoginMethod;
 use codex_protocol::config_types::Personality;
+use codex_protocol::config_types::TrustLevel;
 use codex_protocol::config_types::WindowsSandboxLevel;
 use codex_protocol::dynamic_tools::DynamicToolSpec as CoreDynamicToolSpec;
+use codex_protocol::error::CodexErr;
+use codex_protocol::error::Result as CodexResult;
 use codex_protocol::items::TurnItem;
 use codex_protocol::models::ResponseItem;
 use codex_protocol::protocol::AgentStatus;
@@ -2190,10 +2193,11 @@ impl CodexMessageProcessor {
         experimental_raw_events: bool,
         request_trace: Option<W3cTraceContext>,
     ) {
-        let config = match derive_config_from_params(
+        let requested_cwd = typesafe_overrides.cwd.clone();
+        let mut config = match derive_config_from_params(
             &cli_overrides,
-            config_overrides,
-            typesafe_overrides,
+            config_overrides.clone(),
+            typesafe_overrides.clone(),
             &cloud_requirements,
             &listener_task_context.codex_home,
             &runtime_feature_enablement,
@@ -2210,6 +2214,56 @@ impl CodexMessageProcessor {
                 return;
             }
         };
+
+        if requested_cwd.is_some()
+            && !config.active_project.is_trusted()
+            && matches!(
+                config.permissions.sandbox_policy.get(),
+                codex_protocol::protocol::SandboxPolicy::WorkspaceWrite { .. }
+                    | codex_protocol::protocol::SandboxPolicy::DangerFullAccess
+                    | codex_protocol::protocol::SandboxPolicy::ExternalSandbox { .. }
+            )
+        {
+            let trust_target = resolve_root_git_project_for_trust(config.cwd.as_path())
+                .unwrap_or_else(|| config.cwd.to_path_buf());
+            if let Err(err) = codex_core::config::set_project_trust_level(
+                &listener_task_context.codex_home,
+                trust_target.as_path(),
+                TrustLevel::Trusted,
+            ) {
+                let error = JSONRPCErrorError {
+                    code: INTERNAL_ERROR_CODE,
+                    message: format!("failed to persist trusted project state: {err}"),
+                    data: None,
+                };
+                listener_task_context
+                    .outgoing
+                    .send_error(request_id, error)
+                    .await;
+                return;
+            }
+
+            config = match derive_config_from_params(
+                &cli_overrides,
+                config_overrides,
+                typesafe_overrides,
+                &cloud_requirements,
+                &listener_task_context.codex_home,
+                &runtime_feature_enablement,
+            )
+            .await
+            {
+                Ok(config) => config,
+                Err(err) => {
+                    let error = config_load_error(&err);
+                    listener_task_context
+                        .outgoing
+                        .send_error(request_id, error)
+                        .await;
+                    return;
+                }
+            };
+        }
 
         let dynamic_tools = dynamic_tools.unwrap_or_default();
         let core_dynamic_tools = if dynamic_tools.is_empty() {
@@ -3296,6 +3350,13 @@ impl CodexMessageProcessor {
             cwd,
             search_term,
         } = params;
+        let cwd = match normalize_thread_list_cwd_filter(cwd) {
+            Ok(cwd) => cwd,
+            Err(error) => {
+                self.outgoing.send_error(request_id, error).await;
+                return;
+            }
+        };
 
         let requested_page_size = limit
             .map(|value| value as usize)
@@ -3314,7 +3375,7 @@ impl CodexMessageProcessor {
                     model_providers,
                     source_kinds,
                     archived: archived.unwrap_or(false),
-                    cwd: cwd.map(PathBuf::from),
+                    cwd,
                     search_term,
                 },
             )
@@ -5081,12 +5142,56 @@ impl CodexMessageProcessor {
         )
         .await;
 
-        let tools_by_server = group_tools_by_server(&snapshot.tools);
+        // Rebuild the tool list per original server name instead of using
+        // `group_tools_by_server()`: qualified tool names are sanitized for the
+        // Responses API, so a config key like `some-server` is encoded as the
+        // `mcp__some_server__` prefix. Matching with the original server name's
+        // sanitized prefix preserves `/mcp` output for hyphenated names.
+        let effective_servers = effective_mcp_servers(&mcp_config, auth.as_ref());
+        let mut sanitized_prefix_counts = HashMap::<String, usize>::new();
+        for name in effective_servers.keys() {
+            let prefix = qualified_mcp_tool_name_prefix(name);
+            *sanitized_prefix_counts.entry(prefix).or_default() += 1;
+        }
+        let tools_by_server = effective_servers
+            .keys()
+            .map(|name| {
+                let prefix = qualified_mcp_tool_name_prefix(name);
+                // If multiple server names normalize to the same prefix, the
+                // qualified tool namespace is ambiguous (for example
+                // `some-server` and `some_server` both become
+                // `mcp__some_server__`). In that case, avoid attributing the
+                // same tools to multiple servers.
+                let tools = if sanitized_prefix_counts
+                    .get(&prefix)
+                    .copied()
+                    .unwrap_or_default()
+                    == 1
+                {
+                    snapshot
+                        .tools
+                        .iter()
+                        .filter_map(|(qualified_name, tool)| {
+                            qualified_name
+                                .strip_prefix(&prefix)
+                                .map(|tool_name| (tool_name.to_string(), tool.clone()))
+                        })
+                        .collect::<HashMap<_, _>>()
+                } else {
+                    HashMap::new()
+                };
+                (name.clone(), tools)
+            })
+            .collect::<HashMap<_, _>>();
 
         let mut server_names: Vec<String> = config
             .mcp_servers
             .keys()
             .cloned()
+            // Include built-in/plugin MCP servers that are present in the
+            // effective runtime config even when they are not user-declared in
+            // `config.mcp_servers`.
+            .chain(effective_servers.keys().cloned())
             .chain(snapshot.auth_statuses.keys().cloned())
             .chain(snapshot.resources.keys().cloned())
             .chain(snapshot.resource_templates.keys().cloned())
@@ -7606,6 +7711,57 @@ impl CodexMessageProcessor {
             Ok(conv) => conv.rollout_path(),
             Err(_) => None,
         }
+    }
+}
+
+fn normalize_thread_list_cwd_filter(
+    cwd: Option<String>,
+) -> Result<Option<PathBuf>, JSONRPCErrorError> {
+    let Some(cwd) = cwd else {
+        return Ok(None);
+    };
+    AbsolutePathBuf::relative_to_current_dir(cwd.as_str())
+        .map(AbsolutePathBuf::into_path_buf)
+        .map(Some)
+        .map_err(|err| JSONRPCErrorError {
+            code: INVALID_PARAMS_ERROR_CODE,
+            message: format!("invalid thread/list cwd filter `{cwd}`: {err}"),
+            data: None,
+        })
+}
+
+#[cfg(test)]
+mod thread_list_cwd_filter_tests {
+    use super::normalize_thread_list_cwd_filter;
+    use codex_utils_absolute_path::AbsolutePathBuf;
+    use pretty_assertions::assert_eq;
+    use std::path::PathBuf;
+
+    #[test]
+    fn normalize_thread_list_cwd_filter_preserves_absolute_paths() {
+        let cwd = if cfg!(windows) {
+            String::from(r"C:\srv\repo-b")
+        } else {
+            String::from("/srv/repo-b")
+        };
+
+        assert_eq!(
+            normalize_thread_list_cwd_filter(Some(cwd.clone())).expect("cwd filter should parse"),
+            Some(PathBuf::from(cwd))
+        );
+    }
+
+    #[test]
+    fn normalize_thread_list_cwd_filter_resolves_relative_paths_against_server_cwd()
+    -> std::io::Result<()> {
+        let expected = AbsolutePathBuf::relative_to_current_dir("repo-b")?.to_path_buf();
+
+        assert_eq!(
+            normalize_thread_list_cwd_filter(Some(String::from("repo-b")))
+                .expect("cwd filter should parse"),
+            Some(expected)
+        );
+        Ok(())
     }
 }
 
