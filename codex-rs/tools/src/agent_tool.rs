@@ -643,9 +643,6 @@ fn spawn_agent_tool_description(
 ) -> String {
     format!(
         r#"
-        Only use `spawn_agent` if and only if the user explicitly asks for sub-agents, delegation, or parallel agent work.
-        Requests for depth, thoroughness, research, investigation, or detailed codebase analysis do not count as permission to spawn.
-        Agent-role guidance below only helps choose which agent to use after spawning is already authorized; it never authorizes spawning by itself.
         Spawn a sub-agent for a well-scoped task. {return_value_description} This spawn_agent tool provides you access to smaller but more efficient sub-agents. A mini model can solve many tasks faster than the main model. You should follow the rules and guidelines below to use this tool.
 
 {available_models_description}
