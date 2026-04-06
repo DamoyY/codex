@@ -105,6 +105,7 @@ two-face = { version = "*", default-features = false, features = ["syntect-defau
 unicode-segmentation = { workspace = true }
 unicode-width = { workspace = true }
 url = { workspace = true }
+urlencoding = { workspace = true }
 webbrowser = { workspace = true }
 uuid = { workspace = true }
 
