@@ -42,6 +42,7 @@ use codex_app_server_protocol::ThreadRealtimeAppendTextParams;
 use codex_app_server_protocol::ThreadRealtimeAppendTextResponse;
 use codex_app_server_protocol::ThreadRealtimeStartParams;
 use codex_app_server_protocol::ThreadRealtimeStartResponse;
+use codex_app_server_protocol::ThreadRealtimeStartTransport;
 use codex_app_server_protocol::ThreadRealtimeStopParams;
 use codex_app_server_protocol::ThreadRealtimeStopResponse;
 use codex_app_server_protocol::ThreadResumeParams;
@@ -63,8 +64,10 @@ use codex_app_server_protocol::TurnStartParams;
 use codex_app_server_protocol::TurnStartResponse;
 use codex_app_server_protocol::TurnSteerParams;
 use codex_app_server_protocol::TurnSteerResponse;
+#[cfg(test)]
+use codex_core::append_message_history_entry;
 use codex_core::config::Config;
-use codex_core::message_history;
+use codex_core::message_history_metadata;
 use codex_otel::TelemetryAuthMode;
 use codex_protocol::ThreadId;
 use codex_protocol::openai_models::ModelAvailabilityNux;
@@ -74,6 +77,7 @@ use codex_protocol::openai_models::ReasoningEffortPreset;
 use codex_protocol::protocol::AskForApproval;
 use codex_protocol::protocol::ConversationAudioParams;
 use codex_protocol::protocol::ConversationStartParams;
+use codex_protocol::protocol::ConversationStartTransport;
 use codex_protocol::protocol::ConversationTextParams;
 use codex_protocol::protocol::CreditsSnapshot;
 use codex_protocol::protocol::RateLimitSnapshot;
@@ -658,6 +662,14 @@ impl AppServerSession {
                     thread_id: thread_id.to_string(),
                     prompt: params.prompt,
                     session_id: params.session_id,
+                    transport: params.transport.map(|transport| match transport {
+                        ConversationStartTransport::Websocket => {
+                            ThreadRealtimeStartTransport::Websocket
+                        }
+                        ConversationStartTransport::Webrtc { sdp } => {
+                            ThreadRealtimeStartTransport::Webrtc { sdp }
+                        }
+                    }),
                 },
             })
             .await
@@ -1076,7 +1088,7 @@ async fn thread_session_state_from_thread_response(
         .map(ThreadId::from_string)
         .transpose()
         .map_err(|err| format!("forked_from_id is invalid: {err}"))?;
-    let (history_log_id, history_entry_count) = message_history::history_metadata(config).await;
+    let (history_log_id, history_entry_count) = message_history_metadata(config).await;
     let history_entry_count = u64::try_from(history_entry_count).unwrap_or(u64::MAX);
 
     Ok(ThreadSessionState {
@@ -1316,10 +1328,10 @@ mod tests {
         let config = build_config(&temp_dir).await;
         let thread_id = ThreadId::new();
 
-        message_history::append_entry("older", &thread_id, &config)
+        append_message_history_entry("older", &thread_id, &config)
             .await
             .expect("history append should succeed");
-        message_history::append_entry("newer", &thread_id, &config)
+        append_message_history_entry("newer", &thread_id, &config)
             .await
             .expect("history append should succeed");
 
