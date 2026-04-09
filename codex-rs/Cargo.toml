@@ -47,6 +47,7 @@ members = [
     "ollama",
     "process-hardening",
     "protocol",
+    "realtime-webrtc",
     "rollout",
     "rmcp-client",
     "responses-api-proxy",
@@ -148,6 +149,7 @@ codex-otel = { path = "otel" }
 codex-plugin = { path = "plugin" }
 codex-process-hardening = { path = "process-hardening" }
 codex-protocol = { path = "protocol" }
+codex-realtime-webrtc = { path = "realtime-webrtc" }
 codex-responses-api-proxy = { path = "responses-api-proxy" }
 codex-response-debug-context = { path = "response-debug-context" }
 codex-rmcp-client = { path = "rmcp-client" }
@@ -349,6 +351,7 @@ vt100 = "*"
 walkdir = "*"
 webbrowser = "*"
 which = "*"
+whoami = "*"
 wildmatch = "*"
 zip = "*"
 zstd = "*"
