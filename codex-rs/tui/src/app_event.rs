@@ -124,6 +124,9 @@ pub(crate) enum AppEvent {
     /// Open the resume picker inside the running TUI session.
     OpenResumePicker,
 
+    /// Resume a thread by UUID or thread name inside the running TUI session.
+    ResumeSessionByIdOrName(String),
+
     /// Fork the current session into a new thread.
     ForkCurrentSession,
 
@@ -166,6 +169,10 @@ pub(crate) enum AppEvent {
         origin: RateLimitRefreshOrigin,
         result: Result<Vec<RateLimitSnapshot>, String>,
     },
+
+    /// Ask Codex to notify the current workspace owner that credits need to be
+    /// added.
+    NotifyWorkspaceOwner,
 
     /// Result of prefetching connectors.
     ConnectorsLoaded {
