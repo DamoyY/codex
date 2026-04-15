@@ -85,6 +85,8 @@ members = [
     "codex-api",
     "state",
     "terminal-detection",
+    "test-binary-support",
+    "thread-store",
     "codex-experimental-api-macros",
     "plugin",
 ]
@@ -162,6 +164,7 @@ codex-skills = { path = "skills" }
 codex-state = { path = "state" }
 codex-stdio-to-uds = { path = "stdio-to-uds" }
 codex-terminal-detection = { path = "terminal-detection" }
+codex-test-binary-support = { path = "test-binary-support" }
 codex-tools = { path = "tools" }
 codex-tui = { path = "tui" }
 codex-utils-absolute-path = { path = "utils/absolute-path" }
@@ -217,6 +220,7 @@ crossbeam-channel = "*"
 crossterm = "0.28.1"
 csv = "*"
 ctor = "*"
+deno_core_icudata = "*"
 derive_more = "*"
 diffy = "*"
 dirs = "*"
