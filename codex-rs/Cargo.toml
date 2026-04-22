@@ -304,7 +304,7 @@ ratatui = "0.29.0"
 ratatui-macros = "0.6"
 regex = "*"
 regex-lite = "*"
-reqwest = { version = "*", features = ["cookies"] }
+reqwest = { version = "0.12", features = ["cookies"] }
 rmcp = { version = "0.15", default-features = false }
 runfiles = { git = "https://github.com/dzbarsky/rules_rust", rev = "b56cbaa8465e74127f1ea216f813cd377295ad81" }
 rustls = { version = "*", default-features = false, features = ["ring", "std"] }
