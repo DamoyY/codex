@@ -1,6 +1,8 @@
 [workspace]
 members = [
+    "aws-auth",
     "analytics",
+    "agent-identity",
     "backend-client",
     "ansi-escape",
     "async-utils",
@@ -24,6 +26,7 @@ members = [
     "collaboration-mode-templates",
     "connectors",
     "config",
+    "device-key",
     "shell-command",
     "shell-escalation",
     "skills",
@@ -31,7 +34,6 @@ members = [
     "core-plugins",
     "core-skills",
     "hooks",
-    "instructions",
     "secrets",
     "exec",
     "exec-server",
@@ -51,6 +53,7 @@ members = [
     "protocol",
     "realtime-webrtc",
     "rollout",
+    "rollout-trace",
     "rmcp-client",
     "responses-api-proxy",
     "response-debug-context",
@@ -89,6 +92,7 @@ members = [
     "terminal-detection",
     "test-binary-support",
     "thread-store",
+    "uds",
     "codex-experimental-api-macros",
     "plugin",
     "model-provider",
@@ -108,8 +112,10 @@ license = "Apache-2.0"
 # Internal
 app_test_support = { path = "app-server/tests/common" }
 codex-analytics = { path = "analytics" }
+codex-agent-identity = { path = "agent-identity" }
 codex-ansi-escape = { path = "ansi-escape" }
 codex-api = { path = "codex-api" }
+codex-aws-auth = { path = "aws-auth" }
 codex-app-server = { path = "app-server" }
 codex-app-server-client = { path = "app-server-client" }
 codex-app-server-protocol = { path = "app-server-protocol" }
@@ -131,6 +137,7 @@ codex-connectors = { path = "connectors" }
 codex-core = { path = "core" }
 codex-core-plugins = { path = "core-plugins" }
 codex-core-skills = { path = "core-skills" }
+codex-device-key = { path = "device-key" }
 codex-exec = { path = "exec" }
 codex-exec-server = { path = "exec-server" }
 codex-execpolicy = { path = "execpolicy" }
@@ -141,7 +148,6 @@ codex-install-context = { path = "install-context" }
 codex-file-search = { path = "file-search" }
 codex-git-utils = { path = "git-utils" }
 codex-hooks = { path = "hooks" }
-codex-instructions = { path = "instructions" }
 codex-keyring-store = { path = "keyring-store" }
 codex-linux-sandbox = { path = "linux-sandbox" }
 codex-lmstudio = { path = "lmstudio" }
@@ -174,6 +180,7 @@ codex-test-binary-support = { path = "test-binary-support" }
 codex-thread-store = { path = "thread-store" }
 codex-tools = { path = "tools" }
 codex-tui = { path = "tui" }
+codex-uds = { path = "uds" }
 codex-utils-absolute-path = { path = "utils/absolute-path" }
 codex-utils-approval-presets = { path = "utils/approval-presets" }
 codex-utils-cache = { path = "utils/cache" }
@@ -211,8 +218,13 @@ arc-swap = "*"
 assert_cmd = "*"
 assert_matches = "*"
 async-channel = "*"
+async-io = "*"
 async-stream = "*"
 async-trait = "*"
+aws-config = "*"
+aws-credential-types = "*"
+aws-sigv4 = "*"
+aws-types = "*"
 axum = { version = "*", default-features = false }
 base64 = "*"
 bm25 = "*"
@@ -224,14 +236,15 @@ clap_complete = "*"
 color-eyre = "*"
 constant_time_eq = "*"
 crossbeam-channel = "*"
-crossterm = "0.28.1"
 crypto_box = { version = "*", features = ["seal"] }
+crossterm = "0.28.1"
 csv = "*"
 ctor = "*"
 deno_core_icudata = "*"
 derive_more = "*"
 diffy = "*"
 dirs = "*"
+dns-lookup = "*"
 dotenvy = "*"
 dunce = "*"
 ed25519-dalek = { version = "*", features = ["pkcs8"] }
@@ -241,6 +254,8 @@ env_logger = "*"
 eventsource-stream = "*"
 futures = { version = "*", default-features = false }
 gethostname = "*"
+gix = { version = "*", default-features = false, features = ["sha1"] }
+glob = "*"
 globset = "*"
 hmac = "0.12"
 http = "*"
@@ -278,6 +293,7 @@ os_info = "*"
 owo-colors = "*"
 path-absolutize = "*"
 pathdiff = "*"
+p256 = "*"
 portable-pty = "*"
 predicates = "*"
 pretty_assertions = "*"
@@ -288,13 +304,10 @@ ratatui = "0.29.0"
 ratatui-macros = "0.6"
 regex = "*"
 regex-lite = "*"
-reqwest = { version = "*", features = ["json", "rustls-tls"] }
+reqwest = { version = "*", features = ["cookies"] }
 rmcp = { version = "0.15", default-features = false }
 runfiles = { git = "https://github.com/dzbarsky/rules_rust", rev = "b56cbaa8465e74127f1ea216f813cd377295ad81" }
-rustls = { version = "*", default-features = false, features = [
-    "ring",
-    "std",
-] }
+rustls = { version = "*", default-features = false, features = ["ring", "std"] }
 rustls-native-certs = "*"
 rustls-pki-types = "*"
 schemars = "0.8"
@@ -349,7 +362,10 @@ tracing-appender = "*"
 tracing-opentelemetry = "*"
 tracing-subscriber = "*"
 tracing-test = "*"
-tonic = { version = "*", default-features = false, features = ["channel", "codegen"] }
+tonic = { version = "*", default-features = false, features = [
+    "channel",
+    "codegen",
+] }
 tonic-prost = "*"
 tree-sitter = "*"
 tree-sitter-bash = "*"
@@ -368,6 +384,7 @@ webbrowser = "*"
 which = "*"
 whoami = "*"
 wildmatch = "*"
+winapi-util = "*"
 zip = "*"
 zstd = "*"
 
