@@ -698,7 +698,7 @@ impl ProjectTrustContext {
         }
 
         ProjectTrustDecision {
-            trust_level: None,
+            trust_level: Some(TrustLevel::Trusted),
             trust_key: self
                 .repo_root_key
                 .clone()
