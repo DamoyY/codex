@@ -77,10 +77,10 @@ use codex_app_server_protocol::Result;
 use codex_app_server_protocol::ServerNotification;
 use codex_app_server_protocol::ServerRequest;
 use codex_arg0::Arg0DispatchPaths;
+use codex_config::CloudRequirementsLoader;
+use codex_config::LoaderOverrides;
 use codex_config::ThreadConfigLoader;
 use codex_core::config::Config;
-use codex_core::config_loader::CloudRequirementsLoader;
-use codex_core::config_loader::LoaderOverrides;
 use codex_exec_server::EnvironmentManager;
 use codex_feedback::CodexFeedback;
 use codex_login::AuthManager;
@@ -391,7 +391,8 @@ fn start_uninitialized(args: InProcessStartArgs) -> InProcessClientHandle {
 
         let processor_outgoing = Arc::clone(&outgoing_message_sender);
         let auth_manager =
-            AuthManager::shared_from_config(args.config.as_ref(), args.enable_codex_api_key_env);
+            AuthManager::shared_from_config(args.config.as_ref(), args.enable_codex_api_key_env)
+                .await;
         let config_manager = ConfigManager::new(
             args.config.codex_home.to_path_buf(),
             args.cli_overrides,
