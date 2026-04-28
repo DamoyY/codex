@@ -840,7 +840,7 @@ pub const FEATURES: &[FeatureSpec] = &[
         id: Feature::EnableMcpApps,
         key: "enable_mcp_apps",
         stage: Stage::UnderDevelopment,
-        default_enabled: false,
+        default_enabled: true,
     },
     FeatureSpec {
         id: Feature::ToolSearch,
