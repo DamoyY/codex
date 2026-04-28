@@ -159,6 +159,8 @@ pub enum Feature {
     ToolSuggest,
     /// Enable plugins.
     Plugins,
+    /// Enable plugin-bundled lifecycle hooks.
+    PluginHooks,
     /// Allow the in-app browser pane in desktop apps.
     ///
     /// Requirements-only gate: this should be set from requirements, not user config.
@@ -874,6 +876,12 @@ pub const FEATURES: &[FeatureSpec] = &[
         id: Feature::Plugins,
         key: "plugins",
         stage: Stage::Stable,
+        default_enabled: true,
+    },
+    FeatureSpec {
+        id: Feature::PluginHooks,
+        key: "plugin_hooks",
+        stage: Stage::UnderDevelopment,
         default_enabled: true,
     },
     FeatureSpec {
