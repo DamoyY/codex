@@ -124,7 +124,27 @@ pub use network_proxy_spec::NetworkProxySpec;
 pub use network_proxy_spec::StartedNetworkProxy;
 pub(crate) use permissions::resolve_permission_profile;
 
-pub use codex_git_utils::GhostSnapshotConfig;
+const DEFAULT_IGNORE_LARGE_UNTRACKED_DIRS: i64 = 200;
+const DEFAULT_IGNORE_LARGE_UNTRACKED_FILES: i64 = 10 * 1024 * 1024;
+
+/// Compatibility-only config retained so legacy `ghost_snapshot` settings
+/// continue to load even though snapshots are no longer produced.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct GhostSnapshotConfig {
+    pub ignore_large_untracked_files: Option<i64>,
+    pub ignore_large_untracked_dirs: Option<i64>,
+    pub disable_warnings: bool,
+}
+
+impl Default for GhostSnapshotConfig {
+    fn default() -> Self {
+        Self {
+            ignore_large_untracked_files: Some(DEFAULT_IGNORE_LARGE_UNTRACKED_FILES),
+            ignore_large_untracked_dirs: Some(DEFAULT_IGNORE_LARGE_UNTRACKED_DIRS),
+            disable_warnings: false,
+        }
+    }
+}
 
 /// Maximum number of bytes of the documentation that will be embedded. Larger
 /// files are *silently truncated* to this size so we do not take up too much of
@@ -655,7 +675,8 @@ pub struct Config {
     /// Default: `300000` (5 minutes).
     pub background_terminal_max_timeout: u64,
 
-    /// Settings for ghost snapshots (used for undo).
+    /// Compatibility-only settings retained for legacy `ghost_snapshot`
+    /// config loading.
     pub ghost_snapshot: GhostSnapshotConfig,
 
     /// Settings specific to the task-path-based multi-agent tool surface.
@@ -710,6 +731,8 @@ pub struct MultiAgentV2Config {
     pub max_concurrent_threads_per_session: usize,
     pub usage_hint_enabled: bool,
     pub usage_hint_text: Option<String>,
+    pub root_agent_usage_hint_text: Option<String>,
+    pub subagent_usage_hint_text: Option<String>,
     pub hide_spawn_agent_metadata: bool,
 }
 
@@ -720,6 +743,8 @@ impl Default for MultiAgentV2Config {
                 DEFAULT_MULTI_AGENT_V2_MAX_CONCURRENT_THREADS_PER_SESSION,
             usage_hint_enabled: true,
             usage_hint_text: None,
+            root_agent_usage_hint_text: None,
+            subagent_usage_hint_text: None,
             hide_spawn_agent_metadata: false,
         }
     }
@@ -1598,6 +1623,16 @@ fn resolve_multi_agent_v2_config(
         .or_else(|| base.and_then(|config| config.usage_hint_text.as_ref()))
         .cloned()
         .or(default.usage_hint_text);
+    let root_agent_usage_hint_text = profile
+        .and_then(|config| config.root_agent_usage_hint_text.as_ref())
+        .or_else(|| base.and_then(|config| config.root_agent_usage_hint_text.as_ref()))
+        .cloned()
+        .or(default.root_agent_usage_hint_text);
+    let subagent_usage_hint_text = profile
+        .and_then(|config| config.subagent_usage_hint_text.as_ref())
+        .or_else(|| base.and_then(|config| config.subagent_usage_hint_text.as_ref()))
+        .cloned()
+        .or(default.subagent_usage_hint_text);
     let hide_spawn_agent_metadata = profile
         .and_then(|config| config.hide_spawn_agent_metadata)
         .or_else(|| base.and_then(|config| config.hide_spawn_agent_metadata))
@@ -1607,6 +1642,8 @@ fn resolve_multi_agent_v2_config(
         max_concurrent_threads_per_session,
         usage_hint_enabled,
         usage_hint_text,
+        root_agent_usage_hint_text,
+        subagent_usage_hint_text,
         hide_spawn_agent_metadata,
     }
 }

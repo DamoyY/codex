@@ -36,6 +36,7 @@ members = [
     "hooks",
     "secrets",
     "exec",
+    "file-system",
     "exec-server",
     "execpolicy",
     "keyring-store",
@@ -141,6 +142,7 @@ codex-core-plugins = { path = "core-plugins" }
 codex-core-skills = { path = "core-skills" }
 codex-device-key = { path = "device-key" }
 codex-exec = { path = "exec" }
+codex-file-system = { path = "file-system" }
 codex-exec-server = { path = "exec-server" }
 codex-execpolicy = { path = "execpolicy" }
 codex-experimental-api-macros = { path = "codex-experimental-api-macros" }
@@ -257,6 +259,7 @@ encoding_rs = "*"
 env-flags = "*"
 env_logger = "*"
 eventsource-stream = "*"
+flate2 = "*"
 futures = { version = "*", default-features = false }
 gethostname = "*"
 gix = { version = "*", default-features = false, features = ["sha1"] }
@@ -346,6 +349,7 @@ strum_macros = "*"
 supports-color = "*"
 syntect = "*"
 sys-locale = "*"
+tar = { version = "*", default-features = false }
 tempfile = "*"
 test-log = "*"
 textwrap = "*"
