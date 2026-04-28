@@ -39,7 +39,6 @@ members = [
     "file-system",
     "exec-server",
     "execpolicy",
-    "execpolicy-legacy",
     "external-agent-sessions",
     "keyring-store",
     "file-search",
