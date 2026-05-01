@@ -613,6 +613,11 @@ client_request_definitions! {
         serialization: global("config"),
         response: v2::PluginReadResponse,
     },
+    PluginSkillRead => "plugin/skill/read" {
+        params: v2::PluginSkillReadParams,
+        serialization: global("config"),
+        response: v2::PluginSkillReadResponse,
+    },
     PluginShareSave => "plugin/share/save" {
         params: v2::PluginShareSaveParams,
         serialization: global("config"),

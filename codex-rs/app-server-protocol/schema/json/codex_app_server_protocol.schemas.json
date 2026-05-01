@@ -769,6 +769,30 @@
             },
             "method": {
               "enum": [
+                "plugin/skill/read"
+              ],
+              "title": "Plugin/skill/readRequestMethod",
+              "type": "string"
+            },
+            "params": {
+              "$ref": "#/definitions/v2/PluginSkillReadParams"
+            }
+          },
+          "required": [
+            "id",
+            "method",
+            "params"
+          ],
+          "title": "Plugin/skill/readRequest",
+          "type": "object"
+        },
+        {
+          "properties": {
+            "id": {
+              "$ref": "#/definitions/v2/RequestId"
+            },
+            "method": {
+              "enum": [
                 "plugin/share/save"
               ],
               "title": "Plugin/share/saveRequestMethod",
@@ -11932,6 +11956,23 @@
         ],
         "type": "string"
       },
+      "PluginAvailability": {
+        "oneOf": [
+          {
+            "enum": [
+              "DISABLED_BY_ADMIN"
+            ],
+            "type": "string"
+          },
+          {
+            "description": "Plugin-service currently sends `\"ENABLED\"` for available remote plugins. Codex app-server exposes `\"AVAILABLE\"` in its API; the alias keeps decoding compatible with that upstream response.",
+            "enum": [
+              "AVAILABLE"
+            ],
+            "type": "string"
+          }
+        ]
+      },
       "PluginDetail": {
         "properties": {
           "apps": {
@@ -12317,6 +12358,31 @@
         "title": "PluginShareDeleteResponse",
         "type": "object"
       },
+      "PluginShareListItem": {
+        "properties": {
+          "localPluginPath": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/v2/AbsolutePathBuf"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "plugin": {
+            "$ref": "#/definitions/v2/PluginSummary"
+          },
+          "shareUrl": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "plugin",
+          "shareUrl"
+        ],
+        "type": "object"
+      },
       "PluginShareListParams": {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "title": "PluginShareListParams",
@@ -12327,7 +12393,7 @@
         "properties": {
           "data": {
             "items": {
-              "$ref": "#/definitions/v2/PluginSummary"
+              "$ref": "#/definitions/v2/PluginShareListItem"
             },
             "type": "array"
           }
@@ -12372,6 +12438,40 @@
           "shareUrl"
         ],
         "title": "PluginShareSaveResponse",
+        "type": "object"
+      },
+      "PluginSkillReadParams": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "properties": {
+          "remoteMarketplaceName": {
+            "type": "string"
+          },
+          "remotePluginId": {
+            "type": "string"
+          },
+          "skillName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "remoteMarketplaceName",
+          "remotePluginId",
+          "skillName"
+        ],
+        "title": "PluginSkillReadParams",
+        "type": "object"
+      },
+      "PluginSkillReadResponse": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "properties": {
+          "contents": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "title": "PluginSkillReadResponse",
         "type": "object"
       },
       "PluginSource": {
@@ -12457,6 +12557,15 @@
         "properties": {
           "authPolicy": {
             "$ref": "#/definitions/v2/PluginAuthPolicy"
+          },
+          "availability": {
+            "allOf": [
+              {
+                "$ref": "#/definitions/v2/PluginAvailability"
+              }
+            ],
+            "default": "AVAILABLE",
+            "description": "Availability state for installing and using the plugin."
           },
           "enabled": {
             "type": "boolean"
