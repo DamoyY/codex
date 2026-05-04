@@ -7,6 +7,7 @@ use crate::backend::MAX_SEARCH_RESULTS;
 use crate::backend::MemoriesBackend;
 use crate::backend::MemoriesBackendError;
 use crate::backend::ReadMemoryRequest;
+use crate::backend::SearchMatchMode;
 use crate::backend::SearchMemoriesRequest;
 use crate::local::LocalMemoriesBackend;
 use crate::schema;
@@ -53,10 +54,15 @@ struct ReadArgs {
     max_lines: Option<usize>,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct SearchArgs {
-    query: String,
+    queries: Vec<String>,
+    match_mode: Option<SearchMatchMode>,
     path: Option<String>,
+    cursor: Option<String>,
+    context_lines: Option<usize>,
+    case_sensitive: Option<bool>,
     max_results: Option<usize>,
 }
 
@@ -141,17 +147,10 @@ impl<B: MemoriesBackend> ServerHandler for MemoriesMcpServer<B> {
             }
             SEARCH_TOOL_NAME => {
                 let args: SearchArgs = parse_args(value)?;
+                let request = args.into_request();
                 json!(
                     self.backend
-                        .search(SearchMemoriesRequest {
-                            query: args.query,
-                            path: args.path,
-                            max_results: clamp_max_results(
-                                args.max_results,
-                                DEFAULT_SEARCH_MAX_RESULTS,
-                                MAX_SEARCH_RESULTS,
-                            ),
-                        })
+                        .search(request)
                         .await
                         .map_err(backend_error_to_mcp)?
                 )
@@ -215,7 +214,9 @@ fn read_tool() -> Tool {
 fn search_tool() -> Tool {
     let mut tool = Tool::new(
         Cow::Borrowed(SEARCH_TOOL_NAME),
-        Cow::Borrowed("Search Codex memory files for exact text matches."),
+        Cow::Borrowed(
+            "Search Codex memory files for line-based substring matches, optionally requiring any or all query substrings on the same line.",
+        ),
         Arc::new(schema::search_input_schema()),
     );
     tool.output_schema = Some(Arc::new(schema::search_output_schema()));
@@ -225,6 +226,24 @@ fn search_tool() -> Tool {
 
 fn parse_args<T: for<'de> Deserialize<'de>>(value: serde_json::Value) -> Result<T, McpError> {
     serde_json::from_value(value).map_err(|err| McpError::invalid_params(err.to_string(), None))
+}
+
+impl SearchArgs {
+    fn into_request(self) -> SearchMemoriesRequest {
+        SearchMemoriesRequest {
+            queries: self.queries,
+            match_mode: self.match_mode.unwrap_or(SearchMatchMode::Any),
+            path: self.path,
+            cursor: self.cursor,
+            context_lines: self.context_lines.unwrap_or(0),
+            case_sensitive: self.case_sensitive.unwrap_or(true),
+            max_results: clamp_max_results(
+                self.max_results,
+                DEFAULT_SEARCH_MAX_RESULTS,
+                MAX_SEARCH_RESULTS,
+            ),
+        }
+    }
 }
 
 fn clamp_max_results(requested: Option<usize>, default: usize, max: usize) -> usize {
@@ -241,5 +260,59 @@ fn backend_error_to_mcp(err: MemoriesBackendError) -> McpError {
         | MemoriesBackendError::NotFile { .. }
         | MemoriesBackendError::EmptyQuery => McpError::invalid_params(err.to_string(), None),
         MemoriesBackendError::Io(_) => McpError::internal_error(err.to_string(), None),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use pretty_assertions::assert_eq;
+    use serde_json::json;
+
+    #[test]
+    fn search_args_accept_multiple_queries() {
+        let args: SearchArgs = parse_args(json!({
+            "queries": ["alpha", "needle"],
+            "case_sensitive": false
+        }))
+        .expect("multi-query args should parse");
+
+        let request = args.into_request();
+
+        assert_eq!(
+            request,
+            SearchMemoriesRequest {
+                queries: vec!["alpha".to_string(), "needle".to_string()],
+                match_mode: SearchMatchMode::Any,
+                path: None,
+                cursor: None,
+                context_lines: 0,
+                case_sensitive: false,
+                max_results: DEFAULT_SEARCH_MAX_RESULTS,
+            }
+        );
+    }
+
+    #[test]
+    fn search_args_reject_legacy_single_query() {
+        let err = parse_args::<SearchArgs>(json!({
+            "query": "needle",
+        }))
+        .expect_err("legacy query field should be rejected");
+
+        assert!(err.message.contains("unknown field"));
+        assert!(err.message.contains("query"));
+    }
+
+    #[test]
+    fn search_args_reject_unknown_fields() {
+        let err = parse_args::<SearchArgs>(json!({
+            "queries": ["needle"],
+            "query": "needle"
+        }))
+        .expect_err("unknown fields should be rejected");
+
+        assert!(err.message.contains("unknown field"));
+        assert!(err.message.contains("query"));
     }
 }

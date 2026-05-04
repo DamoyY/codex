@@ -73,11 +73,19 @@ pub(crate) fn search_input_schema() -> JsonObject {
     json_schema(json!({
         "type": "object",
         "properties": {
-            "query": { "type": "string" },
+            "queries": {
+                "type": "array",
+                "items": { "type": "string" },
+                "minItems": 1
+            },
+            "match_mode": { "type": "string", "enum": ["any", "all"] },
             "path": { "type": "string" },
+            "cursor": { "type": "string" },
+            "context_lines": { "type": "integer", "minimum": 0 },
+            "case_sensitive": { "type": "boolean" },
             "max_results": { "type": "integer", "minimum": 1 }
         },
-        "required": ["query"],
+        "required": ["queries"],
         "additionalProperties": false
     }))
 }
@@ -86,8 +94,15 @@ pub(crate) fn search_output_schema() -> JsonObject {
     json_schema(json!({
         "type": "object",
         "properties": {
-            "query": { "type": "string" },
+            "queries": {
+                "type": "array",
+                "items": { "type": "string" }
+            },
+            "match_mode": { "type": "string", "enum": ["any", "all"] },
             "path": {
+                "anyOf": [{ "type": "string" }, { "type": "null" }]
+            },
+            "next_cursor": {
                 "anyOf": [{ "type": "string" }, { "type": "null" }]
             },
             "matches": {
@@ -96,16 +111,21 @@ pub(crate) fn search_output_schema() -> JsonObject {
                     "type": "object",
                     "properties": {
                         "path": { "type": "string" },
-                        "line_number": { "type": "integer" },
-                        "line": { "type": "string" }
+                        "match_line_number": { "type": "integer" },
+                        "content_start_line_number": { "type": "integer" },
+                        "content": { "type": "string" },
+                        "matched_queries": {
+                            "type": "array",
+                            "items": { "type": "string" }
+                        }
                     },
-                    "required": ["path", "line_number", "line"],
+                    "required": ["path", "match_line_number", "content_start_line_number", "content", "matched_queries"],
                     "additionalProperties": false
                 }
             },
             "truncated": { "type": "boolean" }
         },
-        "required": ["query", "path", "matches", "truncated"],
+        "required": ["queries", "match_mode", "path", "matches", "next_cursor", "truncated"],
         "additionalProperties": false
     }))
 }

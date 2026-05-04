@@ -1,3 +1,4 @@
+use serde::Deserialize;
 use serde::Serialize;
 use std::future::Future;
 
@@ -63,17 +64,30 @@ pub struct ReadMemoryResponse {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SearchMemoriesRequest {
-    pub query: String,
+    pub queries: Vec<String>,
+    pub match_mode: SearchMatchMode,
     pub path: Option<String>,
+    pub cursor: Option<String>,
+    pub context_lines: usize,
+    pub case_sensitive: bool,
     pub max_results: usize,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct SearchMemoriesResponse {
-    pub query: String,
+    pub queries: Vec<String>,
+    pub match_mode: SearchMatchMode,
     pub path: Option<String>,
     pub matches: Vec<MemorySearchMatch>,
+    pub next_cursor: Option<String>,
     pub truncated: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SearchMatchMode {
+    Any,
+    All,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -92,8 +106,10 @@ pub enum MemoryEntryType {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct MemorySearchMatch {
     pub path: String,
-    pub line_number: usize,
-    pub line: String,
+    pub match_line_number: usize,
+    pub content_start_line_number: usize,
+    pub content: String,
+    pub matched_queries: Vec<String>,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -110,7 +126,7 @@ pub enum MemoriesBackendError {
     LineOffsetExceedsFileLength,
     #[error("path '{path}' is not a file")]
     NotFile { path: String },
-    #[error("query must not be empty")]
+    #[error("queries must not be empty or contain empty strings")]
     EmptyQuery,
     #[error("I/O error while reading memories: {0}")]
     Io(#[from] std::io::Error),
