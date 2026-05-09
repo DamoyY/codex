@@ -32,3 +32,6 @@ winapi = { version = "*", features = [
 ] }
 [target.'cfg(unix)'.dependencies]
 libc = { workspace = true }
+
+[lib]
+doctest = false
