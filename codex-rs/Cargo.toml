@@ -5,7 +5,6 @@ members = [
     "agent-graph-store",
     "agent-identity",
     "backend-client",
-    "builtin-mcps",
     "bwrap",
     "ansi-escape",
     "async-utils",
@@ -44,6 +43,9 @@ members = [
     "file-system",
     "exec-server",
     "execpolicy",
+    "ext/extension-api",
+    "ext/guardian",
+    "ext/memories",
     "external-agent-migration",
     "external-agent-sessions",
     "keyring-store",
@@ -140,7 +142,6 @@ codex-apply-patch = { path = "apply-patch" }
 codex-arg0 = { path = "arg0" }
 codex-async-utils = { path = "async-utils" }
 codex-backend-client = { path = "backend-client" }
-codex-builtin-mcps = { path = "builtin-mcps" }
 codex-chatgpt = { path = "chatgpt" }
 codex-cli = { path = "cli" }
 codex-client = { path = "codex-client" }
@@ -159,6 +160,8 @@ codex-exec = { path = "exec" }
 codex-file-system = { path = "file-system" }
 codex-exec-server = { path = "exec-server" }
 codex-execpolicy = { path = "execpolicy" }
+codex-extension-api = { path = "ext/extension-api" }
+codex-guardian = { path = "ext/guardian" }
 codex-external-agent-migration = { path = "external-agent-migration" }
 codex-external-agent-sessions = { path = "external-agent-sessions" }
 codex-experimental-api-macros = { path = "codex-experimental-api-macros" }
@@ -174,7 +177,7 @@ codex-linux-sandbox = { path = "linux-sandbox" }
 codex-lmstudio = { path = "lmstudio" }
 codex-login = { path = "login" }
 codex-message-history = { path = "message-history" }
-codex-memories-mcp = { path = "memories/mcp" }
+codex-memories-extension = { path = "ext/memories" }
 codex-memories-read = { path = "memories/read" }
 codex-memories-write = { path = "memories/write" }
 codex-mcp = { path = "codex-mcp" }
@@ -222,7 +225,6 @@ codex-utils-output-truncation = { path = "utils/output-truncation" }
 codex-utils-path = { path = "utils/path-utils" }
 codex-utils-plugins = { path = "utils/plugins" }
 codex-utils-pty = { path = "utils/pty" }
-codex-utils-readiness = { path = "utils/readiness" }
 codex-utils-rustls-provider = { path = "utils/rustls-provider" }
 codex-utils-sandbox-summary = { path = "utils/sandbox-summary" }
 codex-utils-sleep-inhibitor = { path = "utils/sleep-inhibitor" }
@@ -275,7 +277,6 @@ dotenvy = "*"
 dunce = "*"
 ed25519-dalek = { version = "*", features = ["pkcs8"] }
 encoding_rs = "*"
-env-flags = "*"
 env_logger = "*"
 eventsource-stream = "*"
 flate2 = "*"
@@ -345,6 +346,7 @@ seccompiler = "*"
 semver = "*"
 sentry = "*"
 serde = "*"
+serde_ignored = "*"
 serde_json = "*"
 serde_path_to_error = "*"
 serde_with = "*"
@@ -431,6 +433,7 @@ zeroize = "*"
 [workspace.metadata.cargo-shear]
 ignored = [
     "codex-agent-graph-store",
+    "codex-memories-extension",
     "icu_provider",
     "openssl-sys",
     "codex-v8-poc",

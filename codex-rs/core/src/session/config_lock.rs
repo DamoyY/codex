@@ -133,6 +133,8 @@ fn save_config_resolved_fields(
     lock_config.model_verbosity = config.model_verbosity;
     lock_config.include_permissions_instructions = Some(config.include_permissions_instructions);
     lock_config.include_apps_instructions = Some(config.include_apps_instructions);
+    lock_config.include_collaboration_mode_instructions =
+        Some(config.include_collaboration_mode_instructions);
     lock_config.include_environment_context = Some(config.include_environment_context);
     lock_config.background_terminal_max_timeout = Some(config.background_terminal_max_timeout);
 
@@ -262,6 +264,8 @@ mod tests {
                 enabled: Some(false),
                 max_concurrent_threads_per_session: Some(_),
                 min_wait_timeout_ms: Some(_),
+                max_wait_timeout_ms: Some(_),
+                default_wait_timeout_ms: Some(_),
                 usage_hint_enabled: Some(_),
                 hide_spawn_agent_metadata: Some(_),
                 ..
