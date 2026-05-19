@@ -394,7 +394,7 @@ toml = "*"
 toml_edit = "*"
 tracing = "*"
 tracing-appender = "*"
-tracing-opentelemetry = "*"
+tracing-opentelemetry = "0.32"
 tracing-subscriber = "*"
 tracing-test = "*"
 tonic = { version = "*", default-features = false, features = [
