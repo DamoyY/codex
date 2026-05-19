@@ -44,6 +44,7 @@ members = [
     "exec-server",
     "execpolicy",
     "ext/extension-api",
+    "ext/goal",
     "ext/guardian",
     "ext/memories",
     "external-agent-migration",
@@ -161,6 +162,7 @@ codex-file-system = { path = "file-system" }
 codex-exec-server = { path = "exec-server" }
 codex-execpolicy = { path = "execpolicy" }
 codex-extension-api = { path = "ext/extension-api" }
+codex-goal-extension = { path = "ext/goal" }
 codex-guardian = { path = "ext/guardian" }
 codex-external-agent-migration = { path = "external-agent-migration" }
 codex-external-agent-sessions = { path = "external-agent-sessions" }
@@ -433,6 +435,7 @@ zeroize = "*"
 [workspace.metadata.cargo-shear]
 ignored = [
     "codex-agent-graph-store",
+    "codex-goal-extension",
     "icu_provider",
     "openssl-sys",
     "codex-v8-poc",
