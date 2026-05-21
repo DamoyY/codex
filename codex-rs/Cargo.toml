@@ -240,7 +240,7 @@ mcp_test_support = { path = "mcp-server/tests/common" }
 
 # External
 age = "*"
-allocative = "*"
+allocative = "=0.3.4"
 ansi-to-tui = "7"
 anyhow = "*"
 arboard = { version = "*", features = ["wayland-data-control"] }
