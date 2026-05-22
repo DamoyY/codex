@@ -300,6 +300,7 @@ indexmap = "*"
 insta = "*"
 inventory = "*"
 itertools = "*"
+jsonptr = { version = "*", default-features = false }
 jsonwebtoken = "*"
 keyring = { version = "*", default-features = false }
 landlock = "*"
