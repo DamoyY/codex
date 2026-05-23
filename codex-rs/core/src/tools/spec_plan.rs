@@ -502,7 +502,7 @@ fn add_tool_sources(context: &CoreToolPlanContext<'_>, planned_tools: &mut Plann
     add_core_utility_tools(context, planned_tools);
     add_collaboration_tools(context, planned_tools);
     add_mcp_runtime_tools(context, planned_tools);
-    add_dynamic_tools(context, planned_tools);
+    //add_dynamic_tools(context, planned_tools);
     add_extension_tools(context, planned_tools);
     for spec in hosted_model_tool_specs(context.turn_context) {
         planned_tools.add_hosted_spec(spec);
