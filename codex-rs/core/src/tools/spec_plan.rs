@@ -561,7 +561,7 @@ fn add_core_utility_tools(context: &CoreToolPlanContext<'_>, planned_tools: &mut
     let features = turn_context.features.get();
     let environment_mode = turn_context.tool_environment_mode();
 
-    planned_tools.add(PlanHandler);
+    //planned_tools.add(PlanHandler);
     if goal_tools_enabled(turn_context) {
         planned_tools.add(GetGoalHandler);
         planned_tools.add(CreateGoalHandler);
