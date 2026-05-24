@@ -234,7 +234,7 @@ fn model_verifications_from_json_value(value: &Value) -> Option<Vec<ModelVerific
 
 fn parse_model_verification(value: &str) -> Option<ModelVerification> {
     match value {
-        TRUSTED_ACCESS_FOR_CYBER_VERIFICATION => Some(ModelVerification::TrustedAccessForCyber),
+        //TRUSTED_ACCESS_FOR_CYBER_VERIFICATION => Some(ModelVerification::TrustedAccessForCyber),
         _ => None,
     }
 }
